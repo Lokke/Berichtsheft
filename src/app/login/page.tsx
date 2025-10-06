@@ -17,13 +17,21 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
 
-    console.log('📝 Submitting login form:', { email, isLogin })
+    // Get values directly from form to handle browser autofill
+    const formData = new FormData(e.currentTarget as HTMLFormElement)
+    const formEmail = formData.get('email') as string
+    const formPassword = formData.get('password') as string
+    const formName = formData.get('name') as string
+
+    console.log('📝 Submitting login form:', { email: formEmail, isLogin })
 
     try {
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register'
-      const body = isLogin ? { email, password } : { email, password, name }
+      const body = isLogin 
+        ? { email: formEmail, password: formPassword } 
+        : { email: formEmail, password: formPassword, name: formName }
 
-      console.log('🌐 Calling:', endpoint)
+      console.log('🌐 Calling:', endpoint, 'with data:', { email: formEmail, hasPassword: !!formPassword })
 
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -37,7 +45,7 @@ export default function LoginPage() {
       if (response.ok) {
         console.log('✅ Login successful, redirecting...')
         // Wait a bit for cookie to be set
-        await new Promise(resolve => setTimeout(resolve, 100))
+        await new Promise(resolve => setTimeout(resolve, 200))
         
         // Nach Registrierung direkt zu Einstellungen, nach Login zum Dashboard
         if (isLogin) {
@@ -77,6 +85,7 @@ export default function LoginPage() {
               <div>
                 <input
                   type="text"
+                  name="name"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -88,6 +97,8 @@ export default function LoginPage() {
             <div>
               <input
                 type="email"
+                name="email"
+                autoComplete="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -100,6 +111,8 @@ export default function LoginPage() {
             <div>
               <input
                 type="password"
+                name="password"
+                autoComplete="current-password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
