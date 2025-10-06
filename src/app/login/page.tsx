@@ -30,12 +30,15 @@ export default function LoginPage() {
       const data = await response.json()
 
       if (response.ok) {
+        // Wait a bit for cookie to be set
+        await new Promise(resolve => setTimeout(resolve, 100))
+        
         // Nach Registrierung direkt zu Einstellungen, nach Login zum Dashboard
         if (isLogin) {
-          router.push('/dashboard')
+          window.location.href = '/dashboard'
         } else {
           // Nach Registrierung zu Einstellungen für initiale Konfiguration
-          router.push('/settings?welcome=true')
+          window.location.href = '/settings?welcome=true'
         }
       } else {
         setError(data.error || 'Something went wrong')
