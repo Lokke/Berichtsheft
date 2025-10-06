@@ -87,20 +87,76 @@ export default function Dashboard() {
     setTempActivities(prev => ({ ...prev, [dateKey]: activities }))
   }
 
+  // Helper: Distribute hours equally among activities, rounded to 0.5
+  const distributeHours = (totalHours: number, activityCount: number): number[] => {
+    if (activityCount === 0) return []
+    
+    const baseHours = totalHours / activityCount
+    const roundedHours = Array(activityCount).fill(0).map(() => Math.round(baseHours * 2) / 2)
+    
+    // Calculate difference and adjust to ensure sum equals totalHours
+    let sum = roundedHours.reduce((a, b) => a + b, 0)
+    let diff = totalHours - sum
+    
+    // Adjust by 0.5 increments until we match the total
+    let idx = 0
+    while (Math.abs(diff) >= 0.5 && idx < activityCount) {
+      if (diff > 0) {
+        roundedHours[idx] += 0.5
+        diff -= 0.5
+      } else {
+        if (roundedHours[idx] >= 0.5) {
+          roundedHours[idx] -= 0.5
+          diff += 0.5
+        }
+      }
+      idx++
+    }
+    
+    return roundedHours
+  }
+
   // Helper: Add activity to specific date
   const addActivityToDate = (date: Date) => {
     const currentActivities = getActivitiesForDate(date)
-    setActivitiesForDate(date, [...currentActivities, {
+    const totalHours = getWorkHoursForDay(date)
+    
+    // Create new activity list
+    const newActivities = [...currentActivities, {
       description: '',
       duration: undefined,
       order: currentActivities.length
-    }])
+    }]
+    
+    // Distribute hours among all activities
+    const distributedHours = distributeHours(totalHours, newActivities.length)
+    const activitiesWithHours = newActivities.map((activity, i) => ({
+      ...activity,
+      duration: distributedHours[i]
+    }))
+    
+    setActivitiesForDate(date, activitiesWithHours)
   }
 
   // Helper: Remove activity from specific date
   const removeActivityFromDate = (date: Date, index: number) => {
     const currentActivities = getActivitiesForDate(date)
-    setActivitiesForDate(date, currentActivities.filter((_, i) => i !== index))
+    const totalHours = getWorkHoursForDay(date)
+    
+    // Remove activity
+    const newActivities = currentActivities.filter((_, i) => i !== index)
+    
+    // Redistribute hours among remaining activities
+    if (newActivities.length > 0) {
+      const distributedHours = distributeHours(totalHours, newActivities.length)
+      const activitiesWithHours = newActivities.map((activity, i) => ({
+        ...activity,
+        duration: distributedHours[i]
+      }))
+      setActivitiesForDate(date, activitiesWithHours)
+    } else {
+      setActivitiesForDate(date, [])
+    }
   }
 
   // Helper: Update activity for specific date
@@ -341,12 +397,8 @@ export default function Dashboard() {
                       ? 'opacity-50 border-gray-200 bg-gray-100 cursor-not-allowed'
                       : editingDate && isSameDay(day, new Date(editingDate + 'T00:00:00'))
                       ? 'border-blue-500 bg-blue-50 cursor-pointer'
-                      : isToday
-                      ? 'border-green-400 bg-green-50 cursor-pointer'
-                      : entry?.isCompleted
+                      : entry && entry.activities && entry.activities.length > 0
                       ? 'border-green-300 bg-green-50 cursor-pointer'
-                      : entry
-                      ? 'border-yellow-300 bg-yellow-50 cursor-pointer'
                       : isPast(day) && !isToday
                       ? 'border-red-300 bg-red-50 cursor-pointer'
                       : 'border-gray-200 hover:border-gray-300 cursor-pointer'
@@ -371,14 +423,9 @@ export default function Dashboard() {
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      {entry?.isCompleted && (
+                      {entry && entry.activities && entry.activities.length > 0 && (
                         <span className="text-green-600" title="Abgeschlossen">
                           ✅
-                        </span>
-                      )}
-                      {entry && !entry.isCompleted && (
-                        <span className="text-yellow-600" title="In Bearbeitung">
-                          🚧
                         </span>
                       )}
                       {!entry && isPast(day) && !isToday && (
@@ -431,7 +478,7 @@ export default function Dashboard() {
                                 placeholder="Std."
                                 step="0.5"
                                 min="0"
-                                max={userConfig?.workHours[day.getDay()] || 8}
+                                max={getWorkHoursForDay(day)}
                                 className="w-full p-2 border border-gray-300 rounded text-center text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 onClick={(e) => e.stopPropagation()}
                               />
@@ -454,27 +501,13 @@ export default function Dashboard() {
                           </div>
                         )}
                         
-                        <div className="flex items-center justify-between pt-2 border-t border-blue-200">
-                          <label className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              checked={tempCompleted[format(day, 'yyyy-MM-dd')] || false}
-                              onChange={(e) => {
-                                const dateKey = format(day, 'yyyy-MM-dd')
-                                setTempCompleted(prev => ({ ...prev, [dateKey]: e.target.checked }))
-                              }}
-                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                            <span className="text-xs text-blue-700">Als abgeschlossen markieren</span>
-                          </label>
-                          
+                        <div className="flex items-center justify-end pt-2 border-t border-blue-200">
                           <button
                             onClick={(e) => {
                               e.stopPropagation()
                               saveEntry(day)
                             }}
-                            className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
+                            className="px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 font-medium"
                           >
                             Speichern
                           </button>

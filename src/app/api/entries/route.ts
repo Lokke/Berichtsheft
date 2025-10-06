@@ -38,6 +38,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
+    console.log('🔐 Entries GET - User ID:', decoded.userId)
+
     const { searchParams } = new URL(request.url)
     const month = parseInt(searchParams.get('month') || '')
     const year = parseInt(searchParams.get('year') || '')

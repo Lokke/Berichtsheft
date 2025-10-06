@@ -26,6 +26,7 @@ interface WorkdayConfig {
 interface MonthlyReport {
   month: string;
   year: string;
+  dateRange?: string; // Optional: formatted date range like "01.10.2024 - 31.10.2025"
   weeks: WeekEntry[];
   userInfo: {
     name: string;
@@ -258,7 +259,7 @@ ${documentContent}
     // Header text
     pdf.text('Tag', 22, tableStartY + 10);
     pdf.text('Ausgeführte Arbeiten, Unterricht, Unterweisungen, etc.', 50, tableStartY + 10);
-    pdf.text('Einzel-\nstunden', 160, tableStartY + 6);
+    pdf.text('Stunden', 163, tableStartY + 10, { align: 'center' });
     pdf.text('Gesamt-\nstunden', 175, tableStartY + 6);
 
     // Define days based on configuration
@@ -288,39 +289,72 @@ ${documentContent}
       dayDate.setDate(startDate.getDate() + dayIndex);
       const dayDateString = formatDate(dayDate);
       
-      // Day column
+      // Parse activities - split by "; " to get individual activities
+      const dayActivitiesString = (week.activities && week.activities[dayIndex]) || '';
+      const dayActivities = dayActivitiesString ? dayActivitiesString.split('; ').filter(a => a.trim()) : [];
+      
+      const dayHours = config.hoursPerDay[day.key as keyof typeof config.hoursPerDay];
+      let dayTotalHours = 0;
+      
+      // Extract hours for each activity
+      const activitiesWithHours = dayActivities.map(activity => {
+        const hoursMatch = activity.match(/\((\d+(?:\.\d+)?)\s*h\)/);
+        const activityHours = hoursMatch ? parseFloat(hoursMatch[1]) : 0;
+        const activityText = activity.replace(/\s*\(\d+(?:\.\d+)?\s*h\)/, '').trim();
+        dayTotalHours += activityHours;
+        return { text: activityText, hours: activityHours };
+      });
+      
+      // Fixed row height regardless of number of activities
+      const fixedRowHeight = rowHeight;
+      
       currentX = 20;
-      pdf.rect(currentX, currentY, colWidths.day, rowHeight);
-      pdf.text(`${day.name}`, currentX + 2, currentY + 8);
+      
+      // Day column - show day name and date
+      pdf.rect(currentX, currentY, colWidths.day, fixedRowHeight);
+      pdf.text(`${day.name}`, currentX + 2, currentY + 7);
       pdf.setFontSize(8);
-      pdf.text(dayDateString, currentX + 2, currentY + 15);
+      pdf.text(dayDateString, currentX + 2, currentY + 13);
       pdf.setFontSize(9);
       
-      // Activities column
+      // Activities column - all activities in one cell with compact line breaks
       currentX += colWidths.day;
-      pdf.rect(currentX, currentY, colWidths.activities, rowHeight);
-      if (week.activities && week.activities[dayIndex]) {
-        const activityText = pdf.splitTextToSize(week.activities[dayIndex] || '', colWidths.activities - 4);
+      pdf.rect(currentX, currentY, colWidths.activities, fixedRowHeight);
+      
+      // Individual hours column - draw border first
+      const hoursColumnX = currentX + colWidths.activities;
+      pdf.rect(hoursColumnX, currentY, colWidths.individualHours, fixedRowHeight);
+      
+      if (activitiesWithHours.length > 0) {
         let textY = currentY + 6;
-        activityText.slice(0, 2).forEach((line: string) => { // Max 2 lines per day for better fit
-          pdf.text(line, currentX + 2, textY);
-          textY += 4;
+        const lineSpacing = 4; // Compact spacing between activities
+        
+        activitiesWithHours.forEach((activity, activityIndex) => {
+          // Show activity text in activities column
+          const wrappedText = pdf.splitTextToSize(activity.text, colWidths.activities - 4);
+          if (textY < currentY + fixedRowHeight - 2 && wrappedText.length > 0) {
+            pdf.text(wrappedText[0], currentX + 2, textY);
+            
+            // Show hours for THIS activity in hours column at SAME Y position
+            if (activity.hours > 0) {
+              pdf.text(activity.hours.toString(), hoursColumnX + 10, textY, { align: 'center' });
+            }
+            
+            textY += lineSpacing;
+          }
         });
       }
       
-      // Individual hours column  
-      currentX += colWidths.activities;
-      pdf.rect(currentX, currentY, colWidths.individualHours, rowHeight);
-      const dayHours = config.hoursPerDay[day.key as keyof typeof config.hoursPerDay];
-      pdf.text(dayHours.toString(), currentX + 10, currentY + 12, { align: 'center' });
-      
       // Total hours column
-      currentX += colWidths.individualHours;
-      pdf.rect(currentX, currentY, colWidths.totalHours, rowHeight);
-      pdf.text(dayHours.toString(), currentX + 12, currentY + 12, { align: 'center' });
+      currentX = hoursColumnX + colWidths.individualHours;
+      pdf.rect(currentX, currentY, colWidths.totalHours, fixedRowHeight);
+      const displayHours = dayTotalHours > 0 ? dayTotalHours : (dayActivities.length > 0 ? dayHours : 0);
+      if (displayHours > 0) {
+        pdf.text(displayHours.toString(), currentX + 12, currentY + 12, { align: 'center' });
+        totalHours += displayHours;
+      }
       
-      totalHours += dayHours;
-      currentY += rowHeight;
+      currentY += fixedRowHeight;
     });
 
     // Total hours row
