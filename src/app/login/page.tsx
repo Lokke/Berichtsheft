@@ -17,9 +17,13 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
 
+    console.log('📝 Submitting login form:', { email, isLogin })
+
     try {
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register'
       const body = isLogin ? { email, password } : { email, password, name }
+
+      console.log('🌐 Calling:', endpoint)
 
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -28,22 +32,28 @@ export default function LoginPage() {
       })
 
       const data = await response.json()
+      console.log('📦 Response:', { status: response.status, ok: response.ok, data })
 
       if (response.ok) {
+        console.log('✅ Login successful, redirecting...')
         // Wait a bit for cookie to be set
         await new Promise(resolve => setTimeout(resolve, 100))
         
         // Nach Registrierung direkt zu Einstellungen, nach Login zum Dashboard
         if (isLogin) {
+          console.log('➡️ Redirecting to /dashboard')
           window.location.href = '/dashboard'
         } else {
           // Nach Registrierung zu Einstellungen für initiale Konfiguration
+          console.log('➡️ Redirecting to /settings')
           window.location.href = '/settings?welcome=true'
         }
       } else {
+        console.error('❌ Login failed:', data.error)
         setError(data.error || 'Something went wrong')
       }
-    } catch {
+    } catch (error) {
+      console.error('❌ Network error:', error)
       setError('Network error')
     } finally {
       setLoading(false)

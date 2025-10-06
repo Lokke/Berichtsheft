@@ -6,6 +6,8 @@ export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json()
 
+    console.log('🔐 Login attempt for:', email)
+
     if (!email || !password) {
       return NextResponse.json(
         { error: 'Email and password are required' },
@@ -17,7 +19,19 @@ export async function POST(request: NextRequest) {
       where: { email }
     })
 
-    if (!user || !(await verifyPassword(password, user.password))) {
+    if (!user) {
+      console.log('❌ User not found:', email)
+      return NextResponse.json(
+        { error: 'Invalid credentials' },
+        { status: 401 }
+      )
+    }
+
+    const passwordValid = await verifyPassword(password, user.password)
+    console.log('🔑 Password valid:', passwordValid)
+
+    if (!passwordValid) {
+      console.log('❌ Invalid password for:', email)
       return NextResponse.json(
         { error: 'Invalid credentials' },
         { status: 401 }
@@ -25,6 +39,7 @@ export async function POST(request: NextRequest) {
     }
 
     const token = generateToken(user.id)
+    console.log('✅ Token generated for user:', user.id)
 
     const response = NextResponse.json({
       user: {
@@ -40,6 +55,8 @@ export async function POST(request: NextRequest) {
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7 // 7 days
     })
+
+    console.log('🍪 Cookie set for user:', user.id)
 
     return response
   } catch (error) {
