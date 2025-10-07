@@ -46,12 +46,13 @@ export default function Dashboard() {
         const data = await response.json()
         setUserConfig(data.user)
       } else if (response.status === 401) {
-        router.push('/login')
+        console.log('❌ User not authenticated, middleware will redirect')
+        // Let middleware handle redirect
       }
     } catch (error) {
       console.error('Failed to fetch user config:', error)
     }
-  }, [router])
+  }, [])
 
   const fetchEntries = useCallback(async () => {
     try {
@@ -63,12 +64,13 @@ export default function Dashboard() {
         const data = await response.json()
         setEntries(data.entries)
       } else if (response.status === 401) {
-        router.push('/login')
+        console.log('❌ User not authenticated, middleware will redirect')
+        // Let middleware handle redirect
       }
     } catch (error) {
       console.error('Failed to fetch entries:', error)
     }
-  }, [currentWeekStart, router])
+  }, [currentWeekStart])
 
   useEffect(() => {
     fetchUserConfig()

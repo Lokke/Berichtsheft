@@ -43,9 +43,31 @@ export default function LoginPage() {
       console.log('📦 Response:', { status: response.status, ok: response.ok, data })
 
       if (response.ok) {
-        console.log('✅ Login successful, redirecting...')
-        // Wait a bit for cookie to be set
-        await new Promise(resolve => setTimeout(resolve, 200))
+        console.log('✅ Login successful!')
+        
+        // Check if cookie was set by trying to read it
+        const checkCookie = async () => {
+          const checkResponse = await fetch('/api/auth/check')
+          const checkData = await checkResponse.json()
+          console.log('🔍 Auth check after login:', checkData)
+          return checkData.authenticated
+        }
+        
+        // Wait for cookie to be set and verify
+        await new Promise(resolve => setTimeout(resolve, 300))
+        const isAuth = await checkCookie()
+        
+        if (!isAuth) {
+          console.error('❌ Cookie not set properly, retrying...')
+          await new Promise(resolve => setTimeout(resolve, 500))
+          const isAuthRetry = await checkCookie()
+          if (!isAuthRetry) {
+            console.error('❌ Cookie still not set after retry')
+            setError('Login erfolgreich, aber Session konnte nicht gesetzt werden. Bitte lade die Seite neu.')
+            setLoading(false)
+            return
+          }
+        }
         
         // Nach Registrierung direkt zu Einstellungen, nach Login zum Dashboard
         if (isLogin) {
