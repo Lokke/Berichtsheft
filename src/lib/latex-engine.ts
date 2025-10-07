@@ -1,5 +1,3 @@
-import { promises as fs } from 'fs';
-import path from 'path';
 import jsPDF from 'jspdf';
 
 interface WeekEntry {
@@ -39,112 +37,14 @@ interface MonthlyReport {
 }
 
 export class LaTeXEngine {
-  private tempDir = path.join(process.cwd(), 'temp', 'latex');
-
   async generatePDF(reportData: MonthlyReport): Promise<Buffer> {
     try {
-      // Ensure temp directory exists
-      await fs.mkdir(this.tempDir, { recursive: true });
-
-      // Setup template files (no longer needed for jsPDF)
-      await this.setupTemplateFiles();
-
-      // Generate PDF using jsPDF (simpler and more reliable than LaTeX.js)
       const pdfBuffer = await this.compileWithjsPDF(reportData);
-
       return pdfBuffer;
     } catch (error) {
-      console.error('LaTeX compilation error:', error);
+      console.error('PDF generation error:', error);
       throw new Error(`Failed to generate PDF: ${error}`);
     }
-  }
-
-  private async setupTemplateFiles(): Promise<void> {
-    // Template setup nicht mehr nötig - wir verwenden jsPDF
-    console.log('Template setup skipped - using jsPDF for PDF generation');
-  }
-
-  private async checkTemplateExists(): Promise<boolean> {
-    try {
-      const templateDir = path.join(process.cwd(), 'LaTeX-Vorlage-Berichtsheft-master');
-      await fs.access(templateDir);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-
-
-  private async generateCompleteLatexDocument(reportData: MonthlyReport): Promise<string> {
-    // Read the original template files
-    const templateDir = path.join(process.cwd(), 'LaTeX-Vorlage-Berichtsheft-master');
-    
-    let packagesContent = '';
-    let befehleContent = '';
-    
-    try {
-      packagesContent = await fs.readFile(path.join(templateDir, 'Packages.tex'), 'utf-8');
-    } catch (error) {
-      console.warn('Could not read Packages.tex, using fallback');
-      packagesContent = this.getFallbackPackages();
-    }
-    
-    try {
-      befehleContent = await fs.readFile(path.join(templateDir, 'Befehle.tex'), 'utf-8');
-    } catch (error) {
-      console.warn('Could not read Befehle.tex, using fallback');
-      befehleContent = this.getFallbackBefehle();
-    }
-
-    // Generate Meta.tex content
-    const metaContent = this.generateMeta(reportData);
-    
-    // Generate main document content
-    const documentContent = this.generateBerichtsheftContent(reportData);
-
-    // Combine everything into a complete LaTeX document
-    return `
-${packagesContent}
-
-${befehleContent}
-
-${metaContent}
-
-\\begin{document}
-
-${documentContent}
-
-\\end{document}
-    `.trim();
-  }
-
-  private generateMeta(reportData: MonthlyReport): string {
-    return `
-% Meta-Informationen für das Berichtsheft
-\\newcommand{\\Auszubildender}{${reportData.userInfo.name}}
-\\newcommand{\\Ausbildungsbetrieb}{${reportData.userInfo.company}}
-\\newcommand{\\Abteilung}{${reportData.userInfo.department}}
-\\newcommand{\\Ausbildungsberuf}{${reportData.userInfo.ausbildungsberuf}}
-\\newcommand{\\Ausbildungsjahr}{${reportData.userInfo.ausbildungsjahr}}
-`.trim();
-  }
-
-  private generateBerichtsheftContent(reportData: MonthlyReport): string {
-    const { month, year, weeks } = reportData;
-    
-    let content = `\\Titelzeile{${month}}{${year}}{1}\n\n`;
-    
-    weeks.forEach((week, index) => {
-      const weekNumber = index + 1;
-      const activities = week.activities.join('\\\\\\n');
-      
-      content += `\\Woche{${weekNumber}}{${activities}}\n\n`;
-    });
-    
-    content += `\\Unterschrift\n`;
-    
-    return content;
   }
 
   private async compileWithjsPDF(reportData: MonthlyReport): Promise<Buffer> {
@@ -399,47 +299,5 @@ ${documentContent}
     pdf.setFontSize(9);
     pdf.text('Auszubildender', 20, signatureY + 22);
     pdf.text('Ausbilder', 20 + signatureWidth + 10, signatureY + 22);
-  }
-
-  private getFallbackPackages(): string {
-    return `
-\\documentclass[11pt,a4paper]{article}
-\\usepackage[utf8]{inputenc}
-\\usepackage[german]{babel}
-\\usepackage{geometry}
-\\usepackage{graphicx}
-\\usepackage{array}
-\\usepackage{longtable}
-\\usepackage{fancyhdr}
-\\geometry{margin=2cm}
-    `.trim();
-  }
-
-  private getFallbackBefehle(): string {
-    return `
-\\newcommand{\\Titelzeile}[3]{
-  \\begin{center}
-    \\Large\\textbf{Berichtsheft}\\\\
-    \\large #1 #2 - Bericht Nr. #3
-  \\end{center}
-  \\vspace{1cm}
-}
-
-\\newcommand{\\Woche}[2]{
-  \\section*{Woche #1}
-  \\begin{itemize}
-    #2
-  \\end{itemize}
-  \\vspace{0.5cm}
-}
-
-\\newcommand{\\Unterschrift}{
-  \\vfill
-  \\begin{flushright}
-    \\rule{5cm}{0.4pt}\\\\
-    Unterschrift Auszubildender
-  \\end{flushright}
-}
-    `.trim();
   }
 }
