@@ -226,13 +226,13 @@ export class LaTeXEngine {
       pdf.rect(hoursColumnX, currentY, colWidths.individualHours, fixedRowHeight);
       
       if (activitiesWithHours.length > 0) {
-        let textY = currentY + 6;
-        const lineSpacing = 4; // Compact spacing between activities
+        let textY = currentY + 3.5; // Start sehr nah am oberen Rand
+        const lineSpacing = 3.5; // Noch kompakterer Abstand zwischen Aktivitäten
         
         activitiesWithHours.forEach((activity, activityIndex) => {
           // Show activity text in activities column
           const wrappedText = pdf.splitTextToSize(activity.text, colWidths.activities - 4);
-          if (textY < currentY + fixedRowHeight - 2 && wrappedText.length > 0) {
+          if (textY < currentY + fixedRowHeight - 1 && wrappedText.length > 0) {
             pdf.text(wrappedText[0], currentX + 2, textY);
             
             // Show hours for THIS activity in hours column at SAME Y position
