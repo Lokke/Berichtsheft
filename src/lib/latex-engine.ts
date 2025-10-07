@@ -259,8 +259,8 @@ ${documentContent}
     // Header text
     pdf.text('Tag', 22, tableStartY + 10);
     pdf.text('Ausgeführte Arbeiten, Unterricht, Unterweisungen, etc.', 50, tableStartY + 10);
-    pdf.text('Stunden', 163, tableStartY + 10, { align: 'center' });
-    pdf.text('Gesamt-\nstunden', 175, tableStartY + 6);
+    pdf.text('Stunden', 155, tableStartY + 10, { align: 'center' });
+    pdf.text('Gesamt-\nstunden', 170, tableStartY + 6);
 
     // Define days based on configuration
     const allDays = [

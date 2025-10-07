@@ -17,8 +17,12 @@ export const generateToken = (userId: string): string => {
 
 export const verifyToken = (token: string): { userId: string } | null => {
   try {
-    return jwt.verify(token, JWT_SECRET) as { userId: string }
-  } catch {
+    console.log('🔍 Verifying token with JWT_SECRET:', JWT_SECRET.substring(0, 10) + '...')
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string }
+    console.log('✅ Token verified successfully:', decoded.userId)
+    return decoded
+  } catch (error) {
+    console.error('❌ Token verification error:', error instanceof Error ? error.message : error)
     return null
   }
 }
