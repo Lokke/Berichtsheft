@@ -6,11 +6,26 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get('token')?.value
   const { pathname } = request.nextUrl
 
-  console.log('🔒 Middleware check:', { pathname, hasToken: !!token })
+  console.log('🔒 Middleware check:', { 
+    pathname, 
+    hasToken: !!token,
+    tokenPreview: token ? token.substring(0, 20) + '...' : 'none',
+    allCookies: request.cookies.getAll().map(c => c.name)
+  })
 
   // Check if user is authenticated
-  const isAuthenticated = token ? verifyToken(token) !== null : false
-  console.log('👤 Authenticated:', isAuthenticated)
+  let isAuthenticated = false
+  if (token) {
+    const verified = verifyToken(token)
+    isAuthenticated = verified !== null
+    if (verified) {
+      console.log('👤 Authenticated as user:', verified.userId)
+    } else {
+      console.log('❌ Token verification failed')
+    }
+  } else {
+    console.log('❌ No token found in cookies')
+  }
 
   // Public routes (login, register)
   const isPublicRoute = pathname === '/login' || pathname === '/' || pathname.startsWith('/_next')

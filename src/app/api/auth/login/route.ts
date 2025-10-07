@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
 
     const token = generateToken(user.id)
     console.log('✅ Token generated for user:', user.id)
+    console.log('🎫 Token:', token.substring(0, 20) + '...')
 
     const response = NextResponse.json({
       user: {
@@ -49,14 +50,23 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    // Set cookie with proper settings for development
     response.cookies.set('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false, // Set to false for localhost development
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7 // 7 days
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: '/' // Explicit path
     })
 
     console.log('🍪 Cookie set for user:', user.id)
+    console.log('🍪 Cookie config:', { 
+      httpOnly: true, 
+      secure: false, 
+      sameSite: 'lax', 
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7 
+    })
 
     return response
   } catch (error) {
