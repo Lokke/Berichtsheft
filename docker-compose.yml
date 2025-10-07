@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  berichtsheft:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: berichtsheft-app
+    restart: unless-stopped
+    ports:
+      - "9455:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:/app/data/dev.db
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production}
+    volumes:
+      # Persist database
+      - ./prisma:/app/data
+      # Persist temp files for PDF generation
+      - ./temp:/app/temp
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/auth/check"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - berichtsheft-network
+
+networks:
+  berichtsheft-network:
+    driver: bridge
