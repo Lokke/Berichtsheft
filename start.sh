@@ -15,27 +15,25 @@ if [ ! -f .env ]; then
   fi
 fi
 
-# Install dependencies if node_modules doesn't exist
-if [ ! -d "node_modules" ]; then
-  echo "📦 Installing dependencies..."
-  npm install
+# Generate Prisma Client (if not exists or outdated)
+if [ ! -d "node_modules/.prisma/client" ]; then
+  echo "🔧 Generating Prisma Client..."
+  npx prisma generate
 fi
-
-# Generate Prisma Client
-echo "🔧 Generating Prisma Client..."
-npx prisma generate
 
 # Run migrations
 echo "🗄️  Running database migrations..."
 npx prisma migrate deploy
 
-# Seed training professions
-echo "🌱 Seeding training professions..."
+# Seed training professions (only if table is empty)
+echo "🌱 Checking training professions..."
 npm run seed || echo "⚠️  Seeding failed or already seeded"
 
-# Build the application
-echo "🏗️  Building application..."
-npm run build
+# Check if build exists
+if [ ! -d ".next" ]; then
+  echo "⚠️  No build found! Please run 'npm run build' first or use start-dev.sh for development."
+  exit 1
+fi
 
 # Start the server
 echo "✅ Starting server on port ${PORT:-9455}..."
