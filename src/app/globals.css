@@ -88,29 +88,92 @@ body {
 
 /* Modern Button Styles */
 .btn {
-  @apply px-6 py-3 rounded-xl font-medium transition-all duration-200;
-  @apply hover:scale-105 active:scale-95;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  font-weight: 500;
+  transition: all 0.2s;
   box-shadow: var(--shadow-md);
+  cursor: pointer;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn:hover {
+  transform: scale(1.05);
+}
+
+.btn:active {
+  transform: scale(0.95);
 }
 
 .btn-primary {
-  @apply btn;
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
   color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-primary:hover {
+  transform: scale(1.05);
+}
+
+.btn-primary:active {
+  transform: scale(0.95);
 }
 
 .btn-secondary {
-  @apply btn glass;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
   color: var(--text-primary);
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-secondary:hover {
+  transform: scale(1.05);
+}
+
+.btn-secondary:active {
+  transform: scale(0.95);
 }
 
 /* Modern Input Styles */
 .input {
-  @apply w-full px-4 py-3 rounded-xl glass;
-  @apply focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-opacity-50;
-  @apply transition-all duration-200;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
+  transition: all 0.2s;
+  outline: none;
+}
+
+.input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--primary);
+  border-color: var(--primary);
 }
 
 .input::placeholder {
@@ -119,7 +182,13 @@ body {
 
 /* Card Styles */
 .card {
-  @apply glass rounded-2xl p-6;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: 1rem;
+  padding: 1.5rem;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -155,11 +224,14 @@ body {
 
 /* Mobile Optimizations */
 @media (max-width: 768px) {
-  .btn {
-    @apply px-4 py-2.5 text-sm;
+  .btn,
+  .btn-primary,
+  .btn-secondary {
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
   }
   
   .card {
-    @apply p-4;
+    padding: 1rem;
   }
 }
