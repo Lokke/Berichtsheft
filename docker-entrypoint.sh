@@ -32,6 +32,12 @@ else
   echo "✅ Migrations checked"
 fi
 
+# Generate Prisma Client
+echo "🔧 Generating Prisma Client..."
+cd /app/data
+npx prisma generate --schema=/app/data/schema.prisma
+echo "✅ Prisma Client generated"
+
 echo "🚀 Starting application..."
 cd /app
 exec node server.js
