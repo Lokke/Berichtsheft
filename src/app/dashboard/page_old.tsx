@@ -108,7 +108,7 @@ export default function Dashboard() {
       const response = await fetch('/api/user/vacations')
       if (response.ok) {
         const data = await response.json()
-        setVacations(data.vacations || [])
+        setVacations(data)
       }
     } catch (error) {
       console.error('Failed to fetch vacations:', error)
@@ -117,56 +117,71 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchUserConfig()
-    fetchVacations()
-  }, [fetchUserConfig, fetchVacations])
-
-  useEffect(() => {
     fetchEntries()
-  }, [fetchEntries])
+    fetchVacations()
+  }, [fetchUserConfig, fetchEntries, fetchVacations])
 
-  // Check if a day is within any vacation period
+  // Helper: Check if date is in vacation period
   const isVacationDay = (date: Date): boolean => {
+    // Normalize date to midnight local time for comparison
+    const checkDate = new Date(date)
+    checkDate.setHours(0, 0, 0, 0)
+    const checkTime = checkDate.getTime()
+    
     return vacations.some(vacation => {
+      // Parse dates and normalize to midnight local time
       const start = new Date(vacation.startDate)
-      const end = new Date(vacation.endDate)
       start.setHours(0, 0, 0, 0)
-      end.setHours(23, 59, 59, 999)
-      return date >= start && date <= end
+      
+      const end = new Date(vacation.endDate)
+      end.setHours(23, 59, 59, 999) // End of day
+      
+      const startTime = start.getTime()
+      const endTime = end.getTime()
+      
+      return checkTime >= startTime && checkTime <= endTime
     })
   }
 
-  // Helper: Distribute hours evenly among activities
-  const distributeHours = (totalHours: number, activityCount: number): number[] => {
-    if (activityCount === 0) return []
-    const hoursPerActivity = Math.floor((totalHours / activityCount) * 2) / 2 // Round to nearest 0.5
-    const distributedHours = new Array(activityCount).fill(hoursPerActivity)
-    
-    // Distribute any remaining hours
-    let remainingHours = totalHours - (hoursPerActivity * activityCount)
-    let index = 0
-    while (remainingHours > 0 && index < activityCount) {
-      distributedHours[index] += 0.5
-      remainingHours -= 0.5
-      index++
-    }
-    
-    return distributedHours
-  }
-
-  // Get activities for a specific date (from temp state or entries)
+  // Helper: Get activities for a specific date
   const getActivitiesForDate = (date: Date): ActivityEntry[] => {
     const dateKey = format(date, 'yyyy-MM-dd')
-    if (tempActivities[dateKey]) {
-      return tempActivities[dateKey]
-    }
-    const entry = getEntryForDate(date)
-    return entry?.activities || []
+    return tempActivities[dateKey] || getEntryForDate(date)?.activities || []
   }
 
-  // Set activities for a specific date
+  // Helper: Set activities for a specific date
   const setActivitiesForDate = (date: Date, activities: ActivityEntry[]) => {
     const dateKey = format(date, 'yyyy-MM-dd')
     setTempActivities(prev => ({ ...prev, [dateKey]: activities }))
+  }
+
+  // Helper: Distribute hours equally among activities, rounded to 0.5
+  const distributeHours = (totalHours: number, activityCount: number): number[] => {
+    if (activityCount === 0) return []
+    
+    const baseHours = totalHours / activityCount
+    const roundedHours = Array(activityCount).fill(0).map(() => Math.round(baseHours * 2) / 2)
+    
+    // Calculate difference and adjust to ensure sum equals totalHours
+    const sum = roundedHours.reduce((a, b) => a + b, 0)
+    let diff = totalHours - sum
+    
+    // Adjust by 0.5 increments until we match the total
+    let idx = 0
+    while (Math.abs(diff) >= 0.5 && idx < activityCount) {
+      if (diff > 0) {
+        roundedHours[idx] += 0.5
+        diff -= 0.5
+      } else {
+        if (roundedHours[idx] >= 0.5) {
+          roundedHours[idx] -= 0.5
+          diff += 0.5
+        }
+      }
+      idx++
+    }
+    
+    return roundedHours
   }
 
   // Helper: Add activity to specific date
@@ -174,13 +189,14 @@ export default function Dashboard() {
     const currentActivities = getActivitiesForDate(date)
     const totalHours = getWorkHoursForDay(date)
     
-    // Add new activity
-    const newActivities = [
-      ...currentActivities,
-      { description: '', duration: 0, order: currentActivities.length }
-    ]
+    // Create new activity list
+    const newActivities = [...currentActivities, {
+      description: '',
+      duration: undefined,
+      order: currentActivities.length
+    }]
     
-    // Redistribute hours among all activities
+    // Distribute hours among all activities
     const distributedHours = distributeHours(totalHours, newActivities.length)
     const activitiesWithHours = newActivities.map((activity, i) => ({
       ...activity,
@@ -378,6 +394,8 @@ export default function Dashboard() {
     return entries.find(entry => isSameDay(new Date(entry.date), date))
   }
 
+
+
   return (
     <div className="min-h-screen p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
@@ -398,221 +416,226 @@ export default function Dashboard() {
           </div>
 
           {/* Navigation */}
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            {/* Week Navigation */}
-            <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+            <h1 className="text-2xl font-bold text-gray-900">
+              Berichtsheft - KW {format(currentWeekStart, 'I', { locale: de })} / {format(currentWeekStart, 'yyyy', { locale: de })}
+            </h1>
+            <div className="flex gap-4">
+              <button
+                onClick={() => router.push('/settings')}
+                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+              >
+                ⚙️ Einstellungen
+              </button>
               <button
                 onClick={goToPreviousWeek}
-                className="btn-secondary px-4 py-2 text-sm"
-                title="Vorwoche"
+                className="px-4 py-2 text-gray-600 hover:text-gray-900"
               >
-                ←
+                ← Vorwoche
               </button>
               <button
                 onClick={goToCurrentWeek}
-                className="btn-primary px-6 py-2 text-sm font-medium"
+                className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
               >
                 Heute
               </button>
               <button
                 onClick={goToNextWeek}
-                className="btn-secondary px-4 py-2 text-sm"
-                title="Nächste Woche"
+                className="px-4 py-2 text-gray-600 hover:text-gray-900"
               >
-                →
+                Nächste Woche →
               </button>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex items-center gap-3">
               <button
                 onClick={generateAllWeeksPDF}
-                className="btn-primary px-4 py-2 text-sm flex items-center gap-2"
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
-                <span>📄</span>
-                <span className="hidden md:inline">PDF generieren</span>
-              </button>
-              <button
-                onClick={() => router.push('/settings')}
-                className="btn-secondary px-4 py-2 text-sm"
-                title="Einstellungen"
-              >
-                ⚙️
+                � Berichtsheft PDF generieren
               </button>
             </div>
           </div>
-        </div>
 
-        {/* Weekly Calendar - Modern Glass Cards */}
-        <div className="space-y-4">
-          {allWeekDays.map(day => {
-            const entry = getEntryForDate(day)
-            const dayName = format(day, 'EEEE', { locale: de })
-            const dayDate = format(day, 'dd.MM.yyyy', { locale: de })
-            const isToday = isSameDay(day, new Date())
-            const isDayEnabled = isWeekdayEnabled(day)
-            const isVacation = isVacationDay(day)
-            
-            return (
-              <div
-                key={day.toISOString()}
-                className={`glass rounded-2xl p-5 transition-all duration-300 ${
-                  isVacation
-                    ? 'opacity-90 cursor-default border-2 border-purple-400/30'
-                    : !isDayEnabled
-                    ? 'opacity-50 cursor-not-allowed'
-                    : editingDate && isSameDay(day, new Date(editingDate + 'T00:00:00'))
-                    ? 'cursor-pointer border-2 border-blue-500/50 shadow-lg'
-                    : entry && entry.activities && entry.activities.length > 0
-                    ? 'cursor-pointer hover:shadow-lg border-2 border-green-400/30'
-                    : isPast(day) && !isToday
-                    ? 'cursor-pointer hover:shadow-lg border-2 border-red-400/30'
-                    : 'cursor-pointer hover:shadow-lg border-2 border-transparent hover:border-purple-400/30'
-                }`}
-                onClick={() => {
-                  if (!isDayEnabled || isVacation) return
-                  toggleEditMode(day)
-                }}
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                      {dayName}
-                    </div>
-                    <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                      {dayDate}
-                    </div>
-                    {isToday && (
-                      <span className="px-3 py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs rounded-full font-medium shadow-sm">
-                        Heute
-                      </span>
-                    )}
-                    {isVacation && (
-                      <span className="px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs rounded-full font-medium shadow-sm">
-                        🏖️ Ferien
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {entry && entry.activities && entry.activities.length > 0 && !isVacation && (
-                      <span className="text-green-500 text-xl" title="Abgeschlossen">
-                        ✓
-                      </span>
-                    )}
-                    {!entry && isPast(day) && !isToday && !isVacation && isDayEnabled && (
-                      <span className="text-red-500 text-xl" title="Kein Eintrag">
-                        ⚠
-                      </span>
-                    )}
-                  </div>
-                </div>
-                
-                {/* Activities Display or Inline Editing */}
-                <div className="space-y-2">
-                  {isVacation ? (
-                    <div className="text-sm italic flex items-center gap-2 px-3 py-2 rounded-xl glass-strong" style={{ color: 'var(--text-secondary)' }}>
-                      🏖️ Ferientag
-                    </div>
-                  ) : !isDayEnabled ? (
-                    <div className="text-sm italic flex items-center gap-2 px-3 py-2 rounded-xl glass-strong" style={{ color: 'var(--text-tertiary)' }}>
-                      🚫 Dieser Wochentag ist deaktiviert
-                    </div>
-                  ) : editingDate === format(day, 'yyyy-MM-dd') ? (
-                    /* Inline-Editing-Modus */
-                    <div className="space-y-3 p-4 rounded-xl glass-strong border-2 border-blue-400/30">
-                      <div className="flex justify-between items-center mb-2">
-                        <h4 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Tätigkeiten bearbeiten</h4>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            addActivityToDate(day)
-                          }}
-                          className="btn-primary px-3 py-1 text-xs"
-                        >
-                          + Hinzufügen
-                        </button>
+          {/* Legend */}
+                    <div className="mb-6">
+            <p className="text-sm text-gray-600 mb-4">
+              Woche vom {format(currentWeekStart, 'dd.MM.yyyy', { locale: de })} bis {format(weekEnd, 'dd.MM.yyyy', { locale: de })}
+            </p>
+          </div>
+
+          {/* Wochenliste - ähnlich PDF Layout */}
+          <div className="space-y-4 mb-6">
+            {allWeekDays.map(day => {
+              const entry = getEntryForDate(day)
+              const dayName = format(day, 'EEEE', { locale: de })
+              const dayDate = format(day, 'dd.MM.yyyy', { locale: de })
+              const isToday = isSameDay(day, new Date())
+              const isDayEnabled = isWeekdayEnabled(day)
+              const isVacation = isVacationDay(day)
+              
+              return (
+                <div
+                  key={day.toISOString()}
+                  className={`bg-white rounded-lg border-2 p-4 transition-all ${
+                    isVacation
+                      ? 'border-purple-300 bg-purple-50 cursor-default'
+                      : !isDayEnabled
+                      ? 'opacity-50 border-gray-200 bg-gray-100 cursor-not-allowed'
+                      : editingDate && isSameDay(day, new Date(editingDate + 'T00:00:00'))
+                      ? 'border-blue-500 bg-blue-50 cursor-pointer'
+                      : entry && entry.activities && entry.activities.length > 0
+                      ? 'border-green-300 bg-green-50 cursor-pointer'
+                      : isPast(day) && !isToday
+                      ? 'border-red-300 bg-red-50 cursor-pointer'
+                      : 'border-gray-200 hover:border-gray-300 cursor-pointer'
+                  }`}
+                  onClick={() => {
+                    if (!isDayEnabled || isVacation) return // Verhindere Klicks auf deaktivierte Tage und Ferientage
+                    toggleEditMode(day)
+                  }}
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="text-lg font-bold text-gray-900">
+                        {dayName}
                       </div>
-                      
-                      {getActivitiesForDate(day).map((activityItem, index) => (
-                        <div key={index} className="flex gap-2 items-center glass p-3 rounded-xl">
-                          <div className="flex-1">
-                            <input
-                              type="text"
-                              value={activityItem.description}
-                              onChange={(e) => updateActivityForDate(day, index, 'description', e.target.value)}
-                              placeholder="Beschreibung der Tätigkeit..."
-                              className="input w-full"
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          </div>
-                          <div className="w-20">
-                            <input
-                              type="number"
-                              value={activityItem.duration || ''}
-                              onChange={(e) => updateActivityForDate(day, index, 'duration', parseFloat(e.target.value) || undefined)}
-                              placeholder="Std."
-                              step="0.5"
-                              min="0"
-                              max={getWorkHoursForDay(day)}
-                              className="input w-full text-center text-xs"
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          </div>
+                      <div className="text-sm text-gray-600">
+                        {dayDate}
+                      </div>
+                      {isToday && (
+                        <span className="px-2 py-1 bg-green-600 text-white text-xs rounded-full">
+                          Heute
+                        </span>
+                      )}
+                      {isVacation && (
+                        <span className="px-2 py-1 bg-purple-600 text-white text-xs rounded-full">
+                          🏖️ Ferien
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {entry && entry.activities && entry.activities.length > 0 && !isVacation && (
+                        <span className="text-green-600" title="Abgeschlossen">
+                          ✅
+                        </span>
+                      )}
+                      {!entry && isPast(day) && !isToday && !isVacation && (
+                        <span className="text-red-600" title="Kein Eintrag">
+                          ⚠️
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Aktivitäten anzeigen oder Inline-Editing */}
+                  <div className="space-y-2">
+                    {isVacation ? (
+                      <div className="text-sm text-purple-700 italic flex items-center gap-2">
+                        🏖️ Ferientag (0 Stunden)
+                      </div>
+                    ) : !isDayEnabled ? (
+                      <div className="text-sm text-gray-500 italic flex items-center gap-2">
+                        🚫 Dieser Wochentag ist in Ihren Arbeitszeit-Einstellungen deaktiviert
+                      </div>
+                    ) : editingDate === format(day, 'yyyy-MM-dd') ? (
+                      /* Inline-Editing-Modus */
+                      <div className="space-y-3 p-3 bg-blue-50 rounded-lg border-2 border-blue-200">
+                        <div className="flex justify-between items-center">
+                          <h4 className="text-sm font-medium text-blue-800">Tätigkeiten bearbeiten:</h4>
                           <button
                             onClick={(e) => {
                               e.stopPropagation()
-                              removeActivityFromDate(day, index)
+                              addActivityToDate(day)
                             }}
-                            className="px-3 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-xl hover:shadow-lg transition-all font-medium"
+                            className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
                           >
-                            ×
+                            + Hinzufügen
                           </button>
                         </div>
-                      ))}
-                      
-                      {getActivitiesForDate(day).length === 0 && (
-                        <div className="text-center py-3 text-sm italic" style={{ color: 'var(--text-tertiary)' }}>
-                          Keine Tätigkeiten. Klicken Sie auf &quot;+ Hinzufügen&quot;.
+                        
+                        {getActivitiesForDate(day).map((activityItem, index) => (
+                          <div key={index} className="flex gap-2 items-center bg-white p-2 rounded border">
+                            <div className="flex-1">
+                              <input
+                                type="text"
+                                value={activityItem.description}
+                                onChange={(e) => updateActivityForDate(day, index, 'description', e.target.value)}
+                                placeholder="Beschreibung der Tätigkeit..."
+                                className="w-full p-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </div>
+                            <div className="w-20">
+                              <input
+                                type="number"
+                                value={activityItem.duration || ''}
+                                onChange={(e) => updateActivityForDate(day, index, 'duration', parseFloat(e.target.value) || undefined)}
+                                placeholder="Std."
+                                step="0.5"
+                                min="0"
+                                max={getWorkHoursForDay(day)}
+                                className="w-full p-2 border border-gray-300 rounded text-center text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                removeActivityFromDate(day, index)
+                              }}
+                              className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                        
+                        {getActivitiesForDate(day).length === 0 && (
+                          <div className="text-center py-2 text-gray-500 text-sm">
+                            Keine Tätigkeiten. Klicken Sie auf &quot;+ Hinzufügen&quot;.
+                          </div>
+                        )}
+                        
+                        <div className="flex items-center justify-end pt-2 border-t border-blue-200">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              saveEntry(day)
+                            }}
+                            className="px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 font-medium"
+                          >
+                            Speichern
+                          </button>
                         </div>
-                      )}
-                      
-                      <div className="flex items-center justify-end pt-3 border-t border-white/10">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            saveEntry(day)
-                          }}
-                          className="btn-primary px-6 py-2 text-sm font-semibold"
-                        >
-                          Speichern
-                        </button>
                       </div>
-                    </div>
-                  ) : (
-                    /* Normal Display */
-                    entry?.activities && entry.activities.length > 0 ? (
-                      entry.activities.map((activity, index: number) => (
-                        <div key={index} className="flex justify-between items-center glass p-3 rounded-xl">
-                          <span className="text-sm" style={{ color: 'var(--text-primary)' }}>
-                            {activity.description}
-                          </span>
-                          {activity.duration && (
-                            <span className="text-xs px-3 py-1 rounded-full glass-strong font-medium" style={{ color: 'var(--text-secondary)' }}>
-                              {activity.duration}h
-                            </span>
-                          )}
-                        </div>
-                      ))
                     ) : (
-                      <div className="text-sm italic px-3 py-2" style={{ color: 'var(--text-tertiary)' }}>
-                        Keine Tätigkeiten eingetragen - Klicken zum Bearbeiten
-                      </div>
-                    )
-                  )}
+                      /* Normale Anzeige */
+                      entry?.activities && entry.activities.length > 0 ? (
+                        entry.activities.map((activity, index: number) => (
+                          <div key={index} className="flex justify-between items-center bg-gray-50 p-2 rounded">
+                            <span className="text-sm text-gray-700">
+                              {activity.description}
+                            </span>
+                            {activity.duration && (
+                              <span className="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded">
+                                {activity.duration}h
+                              </span>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-sm text-gray-400 italic">
+                          Keine Tätigkeiten eingetragen - Klicken zum Bearbeiten
+                        </div>
+                      )
+                    )}
+                  </div>
                 </div>
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
+
+
+
+          {/* Inline Editing - No separate form needed */}
         </div>
       </div>
     </div>

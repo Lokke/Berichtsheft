@@ -31,7 +31,10 @@ interface UserSettings {
   sundayHours: number
 }
 
+type TabType = 'profile' | 'training' | 'vacation'
+
 export default function SettingsPage() {
+  const [activeTab, setActiveTab] = useState<TabType>('profile')
   const [isWelcome, setIsWelcome] = useState(false)
   const [settings, setSettings] = useState<UserSettings>({
     name: '',
@@ -162,237 +165,303 @@ export default function SettingsPage() {
     })
   }
 
+  const tabs = [
+    { id: 'profile' as TabType, label: 'Profil', icon: '👤' },
+    { id: 'training' as TabType, label: 'Ausbildung', icon: '📚' },
+    { id: 'vacation' as TabType, label: 'Urlaub', icon: '🏖️' }
+  ]
+
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-lg shadow p-6">
+    <div className="min-h-screen p-4 md:p-6">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="glass-strong rounded-3xl p-6 mb-6 animate-slide-in">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <h1 className="text-3xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
+                ⚙️ Einstellungen
+              </h1>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                Verwalte deine persönlichen Daten und Arbeitszeiten
+              </p>
+            </div>
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="btn-secondary px-4 py-2 text-sm"
+            >
+              ← Dashboard
+            </button>
+          </div>
+
           {/* Willkommens-Banner für neue Benutzer */}
           {isWelcome && (
-            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="flex items-start">
+            <div className="mt-6 p-4 rounded-2xl glass border-2 border-blue-400/30 animate-fade-in">
+              <div className="flex items-start gap-3">
                 <div className="flex-shrink-0">
-                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm font-bold">!</span>
+                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-lg">💡</span>
                   </div>
                 </div>
-                <div className="ml-3">
-                  <h3 className="text-lg font-medium text-blue-900">
-                    Willkommen! Einstellungen erforderlich
+                <div>
+                  <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>
+                    Willkommen! Erste Einrichtung
                   </h3>
-                  <p className="mt-1 text-sm text-blue-700">
-                    Bitte konfigurieren Sie zuerst Ihre persönlichen Daten und Arbeitszeiten, 
-                    bevor Sie mit dem Berichtsheft beginnen können.
+                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    Bitte konfiguriere zuerst deine persönlichen Daten und Arbeitszeiten, 
+                    bevor du mit dem Berichtsheft beginnen kannst.
                   </p>
                 </div>
               </div>
             </div>
           )}
 
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Einstellungen</h1>
-            <button
-              onClick={() => router.push('/dashboard')}
-              className="px-4 py-2 text-gray-600 hover:text-gray-900"
-            >
-              ← Zurück zum Dashboard
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Vorname *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={settings.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nachname *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={settings.surname}
-                  onChange={(e) => handleInputChange('surname', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+          {/* Tab Navigation */}
+          {!isWelcome && (
+            <div className="flex gap-2 mt-6 overflow-x-auto">
+              {tabs.map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
+                    activeTab === tab.id
+                      ? 'btn-primary'
+                      : 'btn-secondary'
+                  }`}
+                >
+                  <span className="mr-2">{tab.icon}</span>
+                  {tab.label}
+                </button>
+              ))}
             </div>
+          )}
+        </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                E-Mail-Adresse
-              </label>
-              <input
-                type="email"
-                value={settings.email}
-                disabled
-                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-500"
-              />
-              <p className="text-xs text-gray-500 mt-1">E-Mail kann nicht geändert werden</p>
-            </div>
+        {/* Content Container */}
+        <div className="glass rounded-3xl p-6 animate-fade-in">
+          <form onSubmit={handleSubmit}>
+            {/* Profile Tab */}
+            {(activeTab === 'profile' || isWelcome) && (
+              <div className="space-y-6">
+                <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+                  Persönliche Daten
+                </h2>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Ausbildungsberuf *
-              </label>
-              <TrainingProfessionSearch
-                value={settings.trainingProfessionId}
-                initialName={settings.trainingProfessionName}
-                onChange={(professionId, professionName) => {
-                  setSettings(prev => ({
-                    ...prev,
-                    trainingProfessionId: professionId,
-                    trainingProfessionName: professionName
-                  }))
-                }}
-                placeholder="Ausbildungsberuf suchen, z.B. Fachinformatiker..."
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Klasse
-                </label>
-                <input
-                  type="text"
-                  value={settings.trainingClass}
-                  onChange={(e) => handleInputChange('trainingClass', e.target.value)}
-                  placeholder="z.B. FI-AE-22A"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Abteilung
-                </label>
-                <input
-                  type="text"
-                  value={settings.department}
-                  onChange={(e) => handleInputChange('department', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Ausbildungsbeginn *
-              </label>
-              <input
-                type="date"
-                required
-                value={settings.trainingStartDate}
-                onChange={(e) => handleInputChange('trainingStartDate', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Wird zur Berechnung des Ausbildungsjahres verwendet
-              </p>
-            </div>
-
-            {/* Arbeitszeit-Konfiguration */}
-            <div className="border-t pt-6 mt-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Arbeitszeit-Konfiguration
-              </h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Konfigurieren Sie Ihre Arbeitszeiten pro Wochentag. Deaktivierte Tage werden weder im Dashboard noch in den PDF-Berichten angezeigt.
-              </p>
-              
-              <div className="space-y-4">
-                {[
-                  { key: 'monday', label: 'Montag', enabled: settings.mondayEnabled, hours: settings.mondayHours },
-                  { key: 'tuesday', label: 'Dienstag', enabled: settings.tuesdayEnabled, hours: settings.tuesdayHours },
-                  { key: 'wednesday', label: 'Mittwoch', enabled: settings.wednesdayEnabled, hours: settings.wednesdayHours },
-                  { key: 'thursday', label: 'Donnerstag', enabled: settings.thursdayEnabled, hours: settings.thursdayHours },
-                  { key: 'friday', label: 'Freitag', enabled: settings.fridayEnabled, hours: settings.fridayHours },
-                  { key: 'saturday', label: 'Samstag', enabled: settings.saturdayEnabled, hours: settings.saturdayHours },
-                  { key: 'sunday', label: 'Sonntag', enabled: settings.sundayEnabled, hours: settings.sundayHours }
-                ].map(({ key, label, enabled, hours }) => (
-                  <div key={key} className="flex items-center space-x-4 p-3 bg-gray-50 rounded-md">
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        id={`${key}Enabled`}
-                        checked={enabled}
-                        onChange={(e) => handleInputChange(`${key}Enabled` as keyof UserSettings, e.target.checked.toString())}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      />
-                      <label htmlFor={`${key}Enabled`} className="ml-2 text-sm font-medium text-gray-700 w-20">
-                        {label}
-                      </label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <select
-                        value={hours}
-                        disabled={!enabled}
-                        onChange={(e) => handleInputChange(`${key}Hours` as keyof UserSettings, e.target.value)}
-                        className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-400"
-                      >
-                        {Array.from({ length: 21 }, (_, i) => i * 0.5).map(value => (
-                          <option key={value} value={value}>
-                            {value.toFixed(1)}h
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+                      Vorname *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={settings.name}
+                      onChange={(e) => handleInputChange('name', e.target.value)}
+                      className="input w-full"
+                    />
                   </div>
-                ))}
-              </div>
-              
-              <div className="mt-4 p-3 bg-blue-50 rounded-md">
-                <p className="text-sm text-blue-700">
-                  <strong>Hinweis:</strong> Die Stundenangaben werden automatisch gleichmäßig auf die aktiven Tätigkeiten verteilt. 
-                  Die kleinste Unterteilung beträgt 0,5 Stunden.
-                </p>
-              </div>
-            </div>
 
-            {message && (
-              <div className={`p-3 rounded-md ${
-                message.includes('erfolgreich') 
-                  ? 'bg-green-100 text-green-700' 
-                  : 'bg-red-100 text-red-700'
-              }`}>
-                {message}
+                  <div>
+                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+                      Nachname *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={settings.surname}
+                      onChange={(e) => handleInputChange('surname', e.target.value)}
+                      className="input w-full"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+                    E-Mail-Adresse
+                  </label>
+                  <input
+                    type="email"
+                    value={settings.email}
+                    disabled
+                    className="input w-full opacity-50 cursor-not-allowed"
+                  />
+                  <p className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
+                    E-Mail kann nicht geändert werden
+                  </p>
+                </div>
               </div>
             )}
 
-            <div className="flex gap-4">
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-              >
-                {loading 
-                  ? 'Speichern...' 
-                  : isWelcome 
-                    ? 'Einrichtung abschließen' 
-                    : 'Einstellungen speichern'
-                }
-              </button>
-            </div>
+            {/* Training Tab */}
+            {(activeTab === 'training' || isWelcome) && (
+              <div className="space-y-6">
+                <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+                  Ausbildungsdaten
+                </h2>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+                    Ausbildungsberuf *
+                  </label>
+                  <TrainingProfessionSearch
+                    value={settings.trainingProfessionId}
+                    initialName={settings.trainingProfessionName}
+                    onChange={(professionId, professionName) => {
+                      setSettings(prev => ({
+                        ...prev,
+                        trainingProfessionId: professionId,
+                        trainingProfessionName: professionName
+                      }))
+                    }}
+                    placeholder="Ausbildungsberuf suchen, z.B. Fachinformatiker..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+                      Klasse
+                    </label>
+                    <input
+                      type="text"
+                      value={settings.trainingClass}
+                      onChange={(e) => handleInputChange('trainingClass', e.target.value)}
+                      placeholder="z.B. FI-AE-22A"
+                      className="input w-full"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+                      Abteilung
+                    </label>
+                    <input
+                      type="text"
+                      value={settings.department}
+                      onChange={(e) => handleInputChange('department', e.target.value)}
+                      className="input w-full"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+                    Ausbildungsbeginn *
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={settings.trainingStartDate}
+                    onChange={(e) => handleInputChange('trainingStartDate', e.target.value)}
+                    className="input w-full"
+                  />
+                  <p className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
+                    Wird zur Berechnung des Ausbildungsjahres verwendet
+                  </p>
+                </div>
+
+                {/* Arbeitszeit-Konfiguration */}
+                <div className="border-t pt-6 mt-6" style={{ borderColor: 'var(--border-color)' }}>
+                  <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
+                    Arbeitszeit-Konfiguration
+                  </h3>
+                  <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
+                    Konfiguriere deine Arbeitszeiten pro Wochentag. Deaktivierte Tage werden weder im Dashboard noch in den PDF-Berichten angezeigt.
+                  </p>
+                  
+                  <div className="space-y-3">
+                    {[
+                      { key: 'monday', label: 'Montag', enabled: settings.mondayEnabled, hours: settings.mondayHours },
+                      { key: 'tuesday', label: 'Dienstag', enabled: settings.tuesdayEnabled, hours: settings.tuesdayHours },
+                      { key: 'wednesday', label: 'Mittwoch', enabled: settings.wednesdayEnabled, hours: settings.wednesdayHours },
+                      { key: 'thursday', label: 'Donnerstag', enabled: settings.thursdayEnabled, hours: settings.thursdayHours },
+                      { key: 'friday', label: 'Freitag', enabled: settings.fridayEnabled, hours: settings.fridayHours },
+                      { key: 'saturday', label: 'Samstag', enabled: settings.saturdayEnabled, hours: settings.saturdayHours },
+                      { key: 'sunday', label: 'Sonntag', enabled: settings.sundayEnabled, hours: settings.sundayHours }
+                    ].map(({ key, label, enabled, hours }) => (
+                      <div key={key} className="flex items-center gap-4 p-4 glass-strong rounded-xl">
+                        <div className="flex items-center flex-1">
+                          <input
+                            type="checkbox"
+                            id={`${key}Enabled`}
+                            checked={enabled}
+                            onChange={(e) => handleInputChange(`${key}Enabled` as keyof UserSettings, e.target.checked.toString())}
+                            className="h-5 w-5 rounded border-2 text-purple-600 focus:ring-2 focus:ring-purple-500"
+                          />
+                          <label htmlFor={`${key}Enabled`} className="ml-3 text-sm font-medium w-28" style={{ color: 'var(--text-primary)' }}>
+                            {label}
+                          </label>
+                        </div>
+                        
+                        <div className="flex items-center">
+                          <select
+                            value={hours}
+                            disabled={!enabled}
+                            onChange={(e) => handleInputChange(`${key}Hours` as keyof UserSettings, e.target.value)}
+                            className="input px-3 py-2 text-sm disabled:opacity-40"
+                          >
+                            {Array.from({ length: 21 }, (_, i) => i * 0.5).map(value => (
+                              <option key={value} value={value}>
+                                {value.toFixed(1)}h
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="mt-4 p-4 rounded-xl glass border-2 border-blue-400/20">
+                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                      <strong>Hinweis:</strong> Die Stundenangaben werden automatisch gleichmäßig auf die Tätigkeiten verteilt. 
+                      Die kleinste Unterteilung beträgt 0,5 Stunden.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Vacation Tab */}
+            {activeTab === 'vacation' && !isWelcome && (
+              <div>
+                <VacationManager />
+              </div>
+            )}
+
+            {/* Save Button and Message (except for vacation tab) */}
+            {activeTab !== 'vacation' && (
+              <>
+                {message && (
+                  <div className={`p-4 rounded-xl mb-4 ${
+                    message.includes('erfolgreich') 
+                      ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-2 border-green-400/30' 
+                      : 'bg-gradient-to-r from-red-500/20 to-pink-500/20 border-2 border-red-400/30'
+                  }`}>
+                    <p className="text-sm font-medium" style={{ 
+                      color: message.includes('erfolgreich') ? 'var(--success-color)' : 'var(--error-color)' 
+                    }}>
+                      {message}
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex gap-4 mt-6">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="btn-primary flex-1 py-3 text-base font-semibold disabled:opacity-50"
+                  >
+                    {loading 
+                      ? 'Speichern...' 
+                      : isWelcome 
+                        ? '✓ Einrichtung abschließen' 
+                        : '💾 Einstellungen speichern'
+                    }
+                  </button>
+                </div>
+              </>
+            )}
           </form>
         </div>
-
-        {/* Ferienverwaltung */}
-        {!isWelcome && (
-          <div className="mt-8">
-            <VacationManager />
-          </div>
-        )}
       </div>
     </div>
   )
