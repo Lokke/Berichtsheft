@@ -5,6 +5,13 @@ import { LaTeXEngine } from '@/lib/latex-engine'
 import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
 
+interface VacationPeriod {
+  id: string
+  startDate: Date
+  endDate: Date
+  description: string | null
+}
+
 export async function GET(request: NextRequest) {
   try {
     const token = request.cookies.get('token')?.value
@@ -84,7 +91,7 @@ export async function GET(request: NextRequest) {
 
     console.log(`🏖️ Found ${vacations.length} vacation periods`)
 
-    const formattedEntries = entries.map((entry: any) => {
+    const formattedEntries = entries.map((entry) => {
       let content = ''
       
       console.log(`\n🔍 Processing entry:`, {
@@ -96,9 +103,9 @@ export async function GET(request: NextRequest) {
       
       // NEW: Use ActivityEntry relation if available
       if (entry.activities && entry.activities.length > 0) {
-        console.log(`   📝 Activities:`, entry.activities.map((a: any) => ({ desc: a.description, dur: a.duration })))
+        console.log(`   📝 Activities:`, entry.activities.map((a) => ({ desc: a.description, dur: a.duration })))
         content = entry.activities
-          .map((act: any) => `${act.description}${act.duration ? ` (${act.duration}h)` : ''}`)
+          .map((act) => `${act.description}${act.duration ? ` (${act.duration}h)` : ''}`)
           .join('; ')
         console.log(`   ✅ Entry ${entry.date.toISOString().split('T')[0]}: ${entry.activities.length} activities from relation`)
         console.log(`   📄 Final content: "${content}"`)
@@ -109,7 +116,7 @@ export async function GET(request: NextRequest) {
           const activities = JSON.parse(entry.activity)
           if (Array.isArray(activities)) {
             content = activities
-              .map((act: any) => `${act.description}${act.duration ? ` (${act.duration}h)` : ''}`)
+              .map((act) => `${act.description}${act.duration ? ` (${act.duration}h)` : ''}`)
               .join('; ')
             console.log(`   ⚠️ Entry ${entry.date.toISOString().split('T')[0]}: ${activities.length} activities from old JSON field`)
           }
@@ -130,9 +137,6 @@ export async function GET(request: NextRequest) {
     const fullName = user.surname ? `${user.name} ${user.surname}` : user.name
     const currentYear = new Date().getFullYear()
     const trainingYear = Math.floor((currentYear - new Date(user.trainingStartDate).getFullYear()) + 1)
-    
-    const startMonth = format(trainingStart, 'MMMM-yyyy', { locale: de })
-    const endMonth = format(now, 'MMMM-yyyy', { locale: de })
     
     const userData = {
       name: fullName,
@@ -168,7 +172,7 @@ export async function GET(request: NextRequest) {
       checkDate.setHours(0, 0, 0, 0)
       const checkTime = checkDate.getTime()
       
-      return vacations.some((vacation: any) => {
+      return vacations.some((vacation: VacationPeriod) => {
         // Parse dates and normalize to midnight local time
         const start = new Date(vacation.startDate)
         start.setHours(0, 0, 0, 0)
@@ -185,7 +189,7 @@ export async function GET(request: NextRequest) {
       })
     }
     
-    formattedEntries.forEach((entry: { date: Date; content: string }) => {
+    formattedEntries.forEach((entry) => {
       // Use UTC components to avoid timezone issues
       const entryDate = new Date(entry.date)
       const year = entryDate.getUTCFullYear()

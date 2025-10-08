@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isPast, isToday } from 'date-fns'
+import { format, eachDayOfInterval, isSameDay, isPast } from 'date-fns'
 import { de } from 'date-fns/locale'
 
 interface ActivityEntry {
@@ -27,6 +27,30 @@ interface VacationPeriod {
   description: string | null
 }
 
+interface UserConfig {
+  id: string
+  email: string
+  name: string | null
+  surname: string | null
+  trainingClass: string | null
+  trainingProfessionId: string | null
+  trainingStartDate: Date | null
+  sundayEnabled: boolean
+  mondayEnabled: boolean
+  tuesdayEnabled: boolean
+  wednesdayEnabled: boolean
+  thursdayEnabled: boolean
+  fridayEnabled: boolean
+  saturdayEnabled: boolean
+  sundayHours: number
+  mondayHours: number
+  tuesdayHours: number
+  wednesdayHours: number
+  thursdayHours: number
+  fridayHours: number
+  saturdayHours: number
+}
+
 export default function Dashboard() {
   const router = useRouter()
   const [currentWeekStart, setCurrentWeekStart] = useState(() => {
@@ -43,8 +67,7 @@ export default function Dashboard() {
   const [editingDate, setEditingDate] = useState<string | null>(null) // Format: 'YYYY-MM-DD'
   const [tempActivities, setTempActivities] = useState<{[key: string]: ActivityEntry[]}>({})
   const [tempCompleted, setTempCompleted] = useState<{[key: string]: boolean}>({})
-  const [loading, setLoading] = useState(false)
-  const [userConfig, setUserConfig] = useState<any>(null)
+  const [userConfig, setUserConfig] = useState<UserConfig | null>(null)
   const [vacations, setVacations] = useState<VacationPeriod[]>([])
 
   const fetchUserConfig = useCallback(async () => {
@@ -140,7 +163,7 @@ export default function Dashboard() {
     const roundedHours = Array(activityCount).fill(0).map(() => Math.round(baseHours * 2) / 2)
     
     // Calculate difference and adjust to ensure sum equals totalHours
-    let sum = roundedHours.reduce((a, b) => a + b, 0)
+    const sum = roundedHours.reduce((a, b) => a + b, 0)
     let diff = totalHours - sum
     
     // Adjust by 0.5 increments until we match the total
@@ -221,7 +244,6 @@ export default function Dashboard() {
     const validActivities = activities.filter(a => a.description.trim())
     if (validActivities.length === 0) return
 
-    setLoading(true)
     try {
         const response = await fetch('/api/entries', {
           method: 'POST',
@@ -251,7 +273,6 @@ export default function Dashboard() {
       } catch (error) {
         console.error('Fehler beim Speichern:', error)
       }
-      setLoading(false)
   }
 
   // Toggle edit mode for a date
@@ -345,7 +366,6 @@ export default function Dashboard() {
   weekEnd.setDate(currentWeekStart.getDate() + 6)
   
   const allWeekDays = eachDayOfInterval({ start: currentWeekStart, end: weekEnd })
-  const weekDays = allWeekDays.filter(day => isWeekdayEnabled(day))
   
   // Navigation functions
   const goToPreviousWeek = () => {
@@ -554,7 +574,7 @@ export default function Dashboard() {
                         
                         {getActivitiesForDate(day).length === 0 && (
                           <div className="text-center py-2 text-gray-500 text-sm">
-                            Keine Tätigkeiten. Klicken Sie auf "+ Hinzufügen".
+                            Keine Tätigkeiten. Klicken Sie auf &quot;+ Hinzufügen&quot;.
                           </div>
                         )}
                         
@@ -573,7 +593,7 @@ export default function Dashboard() {
                     ) : (
                       /* Normale Anzeige */
                       entry?.activities && entry.activities.length > 0 ? (
-                        entry.activities.map((activity: any, index: number) => (
+                        entry.activities.map((activity, index: number) => (
                           <div key={index} className="flex justify-between items-center bg-gray-50 p-2 rounded">
                             <span className="text-sm text-gray-700">
                               {activity.description}

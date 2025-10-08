@@ -229,7 +229,7 @@ export class LaTeXEngine {
         let textY = currentY + 3.5; // Start sehr nah am oberen Rand
         const lineSpacing = 3.5; // Noch kompakterer Abstand zwischen Aktivitäten
         
-        activitiesWithHours.forEach((activity, activityIndex) => {
+        activitiesWithHours.forEach((activity) => {
           // Show activity text in activities column
           const wrappedText = pdf.splitTextToSize(activity.text, colWidths.activities - 4);
           if (textY < currentY + fixedRowHeight - 1 && wrappedText.length > 0) {

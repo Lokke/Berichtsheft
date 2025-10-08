@@ -4,6 +4,12 @@ import { verifyToken } from '@/lib/auth'
 import { getWeek } from 'date-fns'
 import { de } from 'date-fns/locale'
 
+interface Activity {
+  description: string
+  duration: number
+  order?: number
+}
+
 // Custom week calculation for October 2025 based on actual work weeks
 function getCustomWeekNumber(date: Date): number {
   const year = date.getFullYear()
@@ -68,14 +74,14 @@ export async function GET(request: NextRequest) {
     })
 
     // Format entries for frontend
-    const processedEntries = entries.map((entry: any) => {
+    const processedEntries = entries.map((entry) => {
       // Use new activities relationship if available, otherwise fallback to JSON parsing
-      let activities: any[] = []
+      let activities: Activity[] = []
       
       if (entry.activities && entry.activities.length > 0) {
-        activities = entry.activities.map((activity: any) => ({
+        activities = entry.activities.map((activity) => ({
           description: activity.description,
-          duration: activity.duration
+          duration: activity.duration || 0
         }))
       } else {
         // Fallback: parse from JSON (for backward compatibility)
@@ -165,10 +171,10 @@ export async function POST(request: NextRequest) {
     let processedActivities = activities
     if (activities.length > 0) {
       const totalWorkHours = dayConfig.hours
-      const activitiesWithoutTime = activities.filter((a: any) => !a.duration)
-      const activitiesWithTime = activities.filter((a: any) => a.duration)
+      const activitiesWithoutTime = activities.filter((a: Activity) => !a.duration)
+      const activitiesWithTime = activities.filter((a: Activity) => a.duration)
       
-      const usedHours = activitiesWithTime.reduce((sum: number, a: any) => sum + (a.duration || 0), 0)
+      const usedHours = activitiesWithTime.reduce((sum: number, a: Activity) => sum + (a.duration || 0), 0)
       const remainingHours = Math.max(0, totalWorkHours - usedHours)
       
       if (activitiesWithoutTime.length > 0 && remainingHours > 0) {
@@ -190,7 +196,7 @@ export async function POST(request: NextRequest) {
         // Distribute leftover hours in 0.5h increments
         const activitiesNeedingExtra = Math.floor(leftoverHours / 0.5)
         
-        activitiesWithoutTime.forEach((a: any, index: number) => {
+        activitiesWithoutTime.forEach((a: Activity, index: number) => {
           a.duration = baseHours
           if (index < activitiesNeedingExtra) {
             a.duration += 0.5
@@ -231,7 +237,7 @@ export async function POST(request: NextRequest) {
           month,
           year,
           activities: {
-            create: processedActivities.map((activity: any, index: number) => ({
+            create: processedActivities.map((activity: Activity, index: number) => ({
               description: activity.description,
               duration: activity.duration,
               order: index
@@ -256,7 +262,7 @@ export async function POST(request: NextRequest) {
           month,
           year,
           activities: {
-            create: processedActivities.map((activity: any, index: number) => ({
+            create: processedActivities.map((activity: Activity, index: number) => ({
               description: activity.description,
               duration: activity.duration,
               order: index
