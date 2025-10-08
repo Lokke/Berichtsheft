@@ -16,15 +16,31 @@ JWT_SECRET=dein-super-sicheres-geheimnis-hier
 
 **⚠️ WICHTIG:** Ändere das `JWT_SECRET` für Produktionsumgebungen!
 
-### 2️⃣ Container starten
+### 2️⃣ Verzeichnisse initialisieren (nur beim ersten Start)
 
 ```bash
+# Auf Linux/Mac:
+chmod +x init-directories.sh
+./init-directories.sh
+
+# Auf Windows (PowerShell als Admin):
+New-Item -ItemType Directory -Force -Path "data"
+New-Item -ItemType Directory -Force -Path "temp"
+```
+
+### 3️⃣ Container bauen und starten
+
+```bash
+# Erstmaliger Build
+docker-compose build
+
+# Container starten
 docker-compose up -d
 ```
 
 Die Anwendung ist dann erreichbar unter: **http://localhost:9455**
 
-### 3️⃣ Container stoppen
+### 4️⃣ Container stoppen
 
 ```bash
 docker-compose down

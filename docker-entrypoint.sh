@@ -1,10 +1,11 @@
 #!/bin/sh
 set -e
 
-echo "🔍 Checking database..."
+echo "🔍 Checking directories and database..."
 
-# Ensure prisma directory exists (permissions come from volume mount)
+# Create directories if they don't exist
 mkdir -p /app/prisma
+mkdir -p /app/temp
 
 # Check if database exists
 if [ ! -f /app/prisma/dev.db ]; then
