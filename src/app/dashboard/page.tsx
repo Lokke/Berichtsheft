@@ -483,12 +483,16 @@ export default function Dashboard() {
                       {dayDate}
                     </div>
                     {isToday && (
-                      <span className="px-3 py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs rounded-full font-medium shadow-sm">
-                        Heute
+                      <span className="px-3 py-1 text-white text-xs rounded-full font-medium shadow-md" style={{
+                        background: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)'
+                      }}>
+                        ✨ Heute
                       </span>
                     )}
                     {isVacation && (
-                      <span className="px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs rounded-full font-medium shadow-sm">
+                      <span className="px-3 py-1 text-white text-xs rounded-full font-medium shadow-md" style={{
+                        background: 'linear-gradient(135deg, #a855f7 0%, #c084fc 100%)'
+                      }}>
                         🏖️ Ferien
                       </span>
                     )}
@@ -510,8 +514,12 @@ export default function Dashboard() {
                 {/* Activities Display or Inline Editing */}
                 <div className="space-y-2">
                   {isVacation ? (
-                    <div className="text-sm italic flex items-center gap-2 px-3 py-2 rounded-xl glass-strong" style={{ color: 'var(--text-secondary)' }}>
-                      🏖️ Ferientag
+                    <div className="text-sm flex items-center gap-2 px-4 py-3 rounded-xl" style={{ 
+                      background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(192, 132, 252, 0.15) 100%)',
+                      border: '2px solid rgba(168, 85, 247, 0.3)'
+                    }}>
+                      <span className="text-lg">🏖️</span>
+                      <span className="font-medium" style={{ color: 'var(--vacation-color)' }}>Ferientag</span>
                     </div>
                   ) : !isDayEnabled ? (
                     <div className="text-sm italic flex items-center gap-2 px-3 py-2 rounded-xl glass-strong" style={{ color: 'var(--text-tertiary)' }}>
@@ -519,22 +527,12 @@ export default function Dashboard() {
                     </div>
                   ) : editingDate === format(day, 'yyyy-MM-dd') ? (
                     /* Inline-Editing-Modus */
-                    <div className="space-y-3 p-4 rounded-xl glass-strong border-2 border-blue-400/30">
-                      <div className="flex justify-between items-center mb-2">
-                        <h4 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Tätigkeiten bearbeiten</h4>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            addActivityToDate(day)
-                          }}
-                          className="btn-primary px-3 py-1 text-xs"
-                        >
-                          + Hinzufügen
-                        </button>
-                      </div>
-                      
+                    <div className="space-y-3 p-4 rounded-xl" style={{
+                      background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%)',
+                      border: '2px solid rgba(99, 102, 241, 0.2)'
+                    }}>
                       {getActivitiesForDate(day).map((activityItem, index) => (
-                        <div key={index} className="flex gap-2 items-center glass p-3 rounded-xl">
+                        <div key={index} className="flex gap-2 items-center activity-card p-3 rounded-xl">
                           <div className="flex-1">
                             <input
                               type="text"
@@ -576,7 +574,17 @@ export default function Dashboard() {
                         </div>
                       )}
                       
-                      <div className="flex items-center justify-end pt-3 border-t border-white/10">
+                      <div className="flex items-center justify-between pt-3 border-t" style={{ borderColor: 'rgba(139, 92, 246, 0.2)' }}>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            addActivityToDate(day)
+                          }}
+                          className="btn-secondary px-4 py-2 text-sm flex items-center gap-2"
+                        >
+                          <span>+</span>
+                          <span>Hinzufügen</span>
+                        </button>
                         <button
                           onClick={(e) => {
                             e.stopPropagation()
@@ -584,7 +592,7 @@ export default function Dashboard() {
                           }}
                           className="btn-primary px-6 py-2 text-sm font-semibold"
                         >
-                          Speichern
+                          💾 Speichern
                         </button>
                       </div>
                     </div>
@@ -592,12 +600,16 @@ export default function Dashboard() {
                     /* Normal Display */
                     entry?.activities && entry.activities.length > 0 ? (
                       entry.activities.map((activity, index: number) => (
-                        <div key={index} className="flex justify-between items-center glass p-3 rounded-xl">
-                          <span className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                        <div key={index} className="flex justify-between items-center activity-card p-4 rounded-xl">
+                          <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
                             {activity.description}
                           </span>
                           {activity.duration && (
-                            <span className="text-xs px-3 py-1 rounded-full glass-strong font-medium" style={{ color: 'var(--text-secondary)' }}>
+                            <span className="text-xs px-3 py-1.5 rounded-full font-semibold" style={{ 
+                              background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%)',
+                              color: 'var(--primary)',
+                              border: '1px solid rgba(99, 102, 241, 0.2)'
+                            }}>
                               {activity.duration}h
                             </span>
                           )}
