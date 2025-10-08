@@ -11,11 +11,11 @@ services:
       - "9455:3000"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=file:/app/data/dev.db
+      - DATABASE_URL=file:/app/prisma/dev.db
       - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production}
     volumes:
-      # Persist database
-      - ./prisma:/app/data
+      # Persist database in prisma directory
+      - ./data:/app/prisma
       # Persist temp files for PDF generation
       - ./temp:/app/temp
     healthcheck:

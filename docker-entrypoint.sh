@@ -3,6 +3,10 @@ set -e
 
 echo "🔍 Checking database..."
 
+# Ensure prisma directory exists and has correct permissions
+mkdir -p /app/prisma
+chmod 755 /app/prisma
+
 # Check if database exists
 if [ ! -f /app/prisma/dev.db ]; then
   echo "📦 Database not found, creating..."

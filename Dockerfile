@@ -51,8 +51,9 @@ COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 COPY --chown=nextjs:nodejs docker-entrypoint.sh ./
 RUN chmod +x docker-entrypoint.sh
 
-# Create temp directory for PDF generation
+# Create directories with proper permissions
 RUN mkdir -p /app/temp && chown -R nextjs:nodejs /app/temp
+RUN mkdir -p /app/prisma && chown -R nextjs:nodejs /app/prisma
 
 USER nextjs
 
