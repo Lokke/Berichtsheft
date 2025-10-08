@@ -42,7 +42,8 @@ RUN adduser --system --uid 1001 nextjs
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/prisma ./prisma
+# Copy prisma schema to /app/prisma-schema (not mounted by volume)
+COPY --from=builder /app/prisma /app/prisma-schema
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 # Copy all node_modules including prisma CLI for migrations
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
@@ -53,7 +54,7 @@ RUN chmod +x docker-entrypoint.sh
 
 # Create directories with proper permissions
 RUN mkdir -p /app/temp && chown -R nextjs:nodejs /app/temp
-RUN mkdir -p /app/prisma && chown -R nextjs:nodejs /app/prisma
+RUN mkdir -p /app/data && chown -R nextjs:nodejs /app/data
 
 USER nextjs
 
