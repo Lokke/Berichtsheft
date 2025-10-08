@@ -1,37 +1,42 @@
 @import "tailwindcss";
 
 :root {
-  /* Modern Color Palette - Vibrant but Professional */
-  --primary: #6366f1;
-  --primary-light: #818cf8;
-  --primary-dark: #4f46e5;
-  --secondary: #8b5cf6;
-  --secondary-light: #a78bfa;
+  /* Playful & Professional Color Palette */
+  --primary: #9d95aa;
+  --primary-light: #a78bfa;
+  --primary-dark: #6d28d9;
+  --secondary: #ec4899;
+  --secondary-light: #f472b6;
   --accent: #14b8a6;
-  --accent-light: #2dd4bf;
+  --accent-light: #5eead4;
+  --orange: #f97316;
+  --orange-light: #fb923c;
   
-  /* Backgrounds - Lighter and more colorful */
-  --bg-primary: #fefeff;
-  --bg-secondary: #f8faff;
-  --bg-tertiary: #eff6ff;
+  /* Backgrounds - Soft gradients */
+  --bg-primary: #fafafa;
+  --bg-secondary: #f5f5f5;
+  --bg-tertiary: #e5e5e5;
   
-  /* Glass Effect - More vibrant */
-  --glass-bg: rgba(255, 255, 255, 0.85);
-  --glass-border: rgba(139, 92, 246, 0.15);
-  --glass-shadow: 0 8px 32px 0 rgba(99, 102, 241, 0.12);
+  /* Glass Effect - Schöne getönte Hintergründe */
+  --glass-bg: rgba(255, 252, 255, 0.65);  /* Leicht rosa getönt */
+  --glass-strong-bg: linear-gradient(135deg, rgba(252, 248, 255, 0.92) 0%, rgba(248, 250, 255, 0.92) 100%); /* Lila-zu-Blau Gradient */
+  --glass-border: rgba(124, 58, 237, 0.2);
+  --glass-shadow: 0 8px 32px rgba(124, 58, 237, 0.18);
   
-  /* Text Colors */
-  --text-primary: #1e293b;
-  --text-secondary: #475569;
-  --text-tertiary: #94a3b8;
+  /* Text Colors - High contrast for readability */
+  --text-primary: #0f172a;        /* Dark slate - für Haupttext */
+  --text-secondary: #334155;      /* Medium slate - für Sekundärtext */
+  --text-tertiary: #64748b;       /* Slate - für Labels/Hints (heller aber lesbar) */
+  --text-on-primary: #ffffff;     /* Weiß - für Text auf dunklem Hintergrund */
+  --text-disabled: #94a3b8;       /* Nur für deaktivierte Elemente */
   
   /* Borders */
-  --border-color: #e0e7ff;
+  --border-color: #e2e8f0;
   --border-radius: 16px;
   --border-radius-sm: 12px;
   --border-radius-lg: 24px;
   
-  /* Status Colors - More vibrant */
+  /* Status Colors - Vibrant and clear */
   --success-color: #10b981;
   --success-light: #34d399;
   --error-color: #ef4444;
@@ -39,14 +44,15 @@
   --warning-color: #f59e0b;
   --warning-light: #fbbf24;
   --info-color: #3b82f6;
-  --vacation-color: #a855f7;
-  --vacation-light: #c084fc;
+  --vacation-color: #8b5cf6;
+  --vacation-light: #a78bfa;
   
   /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.15);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+  --shadow-color: 0 8px 20px rgba(124, 58, 237, 0.25);
 }
 
 @theme inline {
@@ -76,7 +82,8 @@
 }
 
 body {
-  background: linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 50%, #fef3f2 100%);
+  background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 25%, #e9d5ff 50%, #fce7f3 75%, #fef3c7 100%);
+  background-attachment: fixed;
   color: var(--text-primary);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   min-height: 100vh;
@@ -85,78 +92,105 @@ body {
 /* Glass Morphism Utility Classes */
 .glass {
   background: var(--glass-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
 }
 
 .glass-strong {
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(139, 92, 246, 0.2);
-  box-shadow: 0 10px 40px 0 rgba(99, 102, 241, 0.15);
+  background: var(--glass-strong-bg);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 2px solid rgba(124, 58, 237, 0.25);
+  box-shadow: 0 12px 48px rgba(124, 58, 237, 0.2);
+}
+
+/* Stelle sicher, dass Text in Glass-Containern immer dunkel ist */
+.glass h1,
+.glass h2,
+.glass h3,
+.glass h4,
+.glass h5,
+.glass h6,
+.glass p,
+.glass label,
+.glass span:not(.text-white),
+.glass div:not([style*="color"]) {
+  color: var(--text-primary);
+}
+
+.glass-strong h1,
+.glass-strong h2,
+.glass-strong h3,
+.glass-strong h4,
+.glass-strong h5,
+.glass-strong h6,
+.glass-strong p,
+.glass-strong label,
+.glass-strong span:not(.text-white),
+.glass-strong div:not([style*="color"]) {
+  color: var(--text-primary);
 }
 
 /* Modern Button Styles */
-.btn {
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.75rem;
-  font-weight: 500;
-  transition: all 0.2s;
-  box-shadow: var(--shadow-md);
-  cursor: pointer;
-  border: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.btn:hover {
-  transform: scale(1.05);
-}
-
-.btn:active {
-  transform: scale(0.95);
-}
-
 .btn-primary {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
   color: white;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.75rem;
-  font-weight: 500;
-  transition: all 0.2s;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 12px rgba(124, 58, 237, 0.3);
   cursor: pointer;
   border: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.btn-primary:hover::before {
+  opacity: 1;
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 8px 25px rgba(124, 58, 237, 0.5);
 }
 
 .btn-primary:active {
   transform: translateY(0);
 }
 
+.btn-primary > * {
+  position: relative;
+  z-index: 1;
+}
+
 .btn-secondary {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.9) 100%);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1.5px solid rgba(139, 92, 246, 0.2);
+  background: white;
   color: var(--text-primary);
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.75rem;
-  font-weight: 500;
-  transition: all 0.2s;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.06);
   cursor: pointer;
+  border: 2px solid transparent;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -164,8 +198,9 @@ body {
 
 .btn-secondary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.2);
-  border-color: rgba(139, 92, 246, 0.4);
+  box-shadow: 0 4px 20px rgba(124, 58, 237, 0.3);
+  border-color: var(--primary);
+  color: var(--primary);
 }
 
 .btn-secondary:active {
@@ -175,23 +210,22 @@ body {
 /* Modern Input Styles */
 .input {
   width: 100%;
-  padding: 0.75rem 1rem;
-  border-radius: 0.75rem;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1.5px solid rgba(139, 92, 246, 0.2);
+  padding: 0.625rem 0.875rem;
+  border-radius: 10px;
+  background: white;
+  border: 2px solid #e2e8f0;
   color: var(--text-primary);
   transition: all 0.2s;
   outline: none;
   font-weight: 500;
+  font-size: 0.875rem;
 }
 
 .input:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
   border-color: var(--primary);
-  background: rgba(255, 255, 255, 1);
+  background: white;
 }
 
 .input::placeholder {
@@ -206,8 +240,8 @@ body {
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
-  border-radius: 1rem;
-  padding: 1.5rem;
+  border-radius: 0.75rem;
+  padding: 1rem;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -243,7 +277,6 @@ body {
 
 /* Mobile Optimizations */
 @media (max-width: 768px) {
-  .btn,
   .btn-primary,
   .btn-secondary {
     padding: 0.625rem 1rem;
@@ -257,15 +290,164 @@ body {
 
 /* Activity Card with better contrast */
 .activity-card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1.5px solid rgba(139, 92, 246, 0.2);
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.08);
-  transition: all 0.2s ease;
+  background: white;
+  border: 2px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .activity-card:hover {
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
-  border-color: rgba(139, 92, 246, 0.3);
+  box-shadow: 0 8px 25px rgba(124, 58, 237, 0.15);
+  border-color: var(--primary-light);
+  transform: translateY(-2px);
+}
+
+.activity-card span:not(.text-white) {
+  color: #0f172a !important;
+}
+
+/* Colorful accent bars for visual interest */
+.accent-bar-purple {
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+}
+
+.accent-bar-pink {
+  background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%);
+}
+
+.accent-bar-teal {
+  background: linear-gradient(135deg, #14b8a6 0%, #5eead4 100%);
+}
+
+.accent-bar-orange {
+  background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+}
+
+/* Text Utility Classes - für konsistente Lesbarkeit */
+.text-dark {
+  color: var(--text-primary) !important;
+}
+
+.text-medium {
+  color: var(--text-secondary) !important;
+}
+
+.text-light {
+  color: var(--text-tertiary) !important;
+}
+
+.text-on-white {
+  color: #0f172a !important;
+}
+
+/* Label & Heading Styles - bereits in .glass Regeln abgedeckt */
+
+/* Specific fixes for form elements */
+select {
+  color: var(--text-primary) !important;
+  font-weight: 500;
+  background: white;
+}
+
+option {
+  color: var(--text-primary) !important;
+}
+
+/* Checkbox styling */
+input[type="checkbox"] {
+  cursor: pointer;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+input[type="checkbox"]:checked {
+  accent-color: var(--primary);
+}
+
+/* Disabled state */
+input:disabled,
+select:disabled,
+textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  color: var(--text-disabled) !important;
+}
+
+/* Gradient Backgrounds - wiederverwendbare Klassen */
+.gradient-purple-pink {
+  background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+}
+
+.gradient-purple-light {
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+}
+
+.gradient-green {
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+}
+
+.gradient-vacation {
+  background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+}
+
+.gradient-red {
+  background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+}
+
+.gradient-rainbow-bar {
+  background: linear-gradient(90deg, #7c3aed 0%, #ec4899 50%, #14b8a6 75%, #f97316 100%);
+}
+
+/* Badge/Pill Styles */
+.badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: white;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.badge-purple {
+  background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+  box-shadow: 0 1px 6px rgba(124, 58, 237, 0.25);
+}
+
+.badge-green {
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  box-shadow: 0 1px 6px rgba(16, 185, 129, 0.25);
+}
+
+.badge-vacation {
+  background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+  box-shadow: 0 1px 6px rgba(139, 92, 246, 0.25);
+}
+
+/* Logo Icon Box */
+.logo-icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4);
+}
+
+/* Error/Alert Box */
+.alert-error {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #dc2626;
+}
+
+/* Vacation Day Display */
+.vacation-display {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(167, 139, 250, 0.1) 100%);
+  border: 2px solid #a78bfa;
+  color: #7c3aed;
 }
