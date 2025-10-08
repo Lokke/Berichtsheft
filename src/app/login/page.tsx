@@ -6,7 +6,6 @@ export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [name, setName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -15,21 +14,13 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
 
-    // Get values directly from form to handle browser autofill
     const formData = new FormData(e.currentTarget as HTMLFormElement)
     const formEmail = formData.get('email') as string
     const formPassword = formData.get('password') as string
-    const formName = formData.get('name') as string
-
-    console.log('📝 Submitting login form:', { email: formEmail, isLogin })
 
     try {
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register'
-      const body = isLogin 
-        ? { email: formEmail, password: formPassword } 
-        : { email: formEmail, password: formPassword, name: formName }
-
-      console.log('🌐 Calling:', endpoint, 'with data:', { email: formEmail, hasPassword: !!formPassword })
+      const body = { email: formEmail, password: formPassword }
 
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -38,134 +29,160 @@ export default function LoginPage() {
       })
 
       const data = await response.json()
-      console.log('📦 Response:', { status: response.status, ok: response.ok, data })
 
       if (response.ok) {
-        console.log('✅ Login successful!')
-        
-        // Check if cookie was set by trying to read it
         const checkCookie = async () => {
           const checkResponse = await fetch('/api/auth/check')
           const checkData = await checkResponse.json()
-          console.log('🔍 Auth check after login:', checkData)
           return checkData.authenticated
         }
         
-        // Wait for cookie to be set and verify
         await new Promise(resolve => setTimeout(resolve, 300))
         const isAuth = await checkCookie()
         
         if (!isAuth) {
-          console.error('❌ Cookie not set properly, retrying...')
           await new Promise(resolve => setTimeout(resolve, 500))
           const isAuthRetry = await checkCookie()
           if (!isAuthRetry) {
-            console.error('❌ Cookie still not set after retry')
             setError('Login erfolgreich, aber Session konnte nicht gesetzt werden. Bitte lade die Seite neu.')
             setLoading(false)
             return
           }
         }
         
-        // Nach Registrierung direkt zu Einstellungen, nach Login zum Dashboard
         if (isLogin) {
-          console.log('➡️ Redirecting to /dashboard')
           window.location.href = '/dashboard'
         } else {
-          // Nach Registrierung zu Einstellungen für initiale Konfiguration
-          console.log('➡️ Redirecting to /settings')
           window.location.href = '/settings?welcome=true'
         }
       } else {
-        console.error('❌ Login failed:', data.error)
-        setError(data.error || 'Something went wrong')
+        setError(data.error || 'Ein Fehler ist aufgetreten')
       }
     } catch (error) {
-      console.error('❌ Network error:', error)
-      setError('Network error')
+      console.error('Login error:', error)
+      setError('Netzwerkfehler')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            {isLogin ? 'Anmelden' : 'Registrieren'}
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Berichtsheft Generator
+    <div className="min-h-screen flex items-center justify-center p-4" 
+         style={{
+           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+         }}>
+      {/* Decorative Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
+      </div>
+
+      <div className="relative w-full max-w-md animate-slide-in">
+        {/* Logo/Title */}
+        <div className="text-center mb-8">
+          <h1 className="text-5xl font-bold text-white mb-2" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
+            📝 Berichtsheft
+          </h1>
+          <p className="text-white/80 text-lg">
+            Deine digitale Ausbildungsdokumentation
           </p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
-            {!isLogin && (
-              <div>
-                <input
-                  type="text"
-                  name="name"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                  placeholder="Name"
-                />
-              </div>
-            )}
+
+        {/* Main Form Card */}
+        <div className="glass-strong rounded-3xl p-8 shadow-2xl">
+          <div className="mb-6 text-center">
+            <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+              {isLogin ? 'Willkommen zurück' : 'Konto erstellen'}
+            </h2>
+            <p style={{ color: 'var(--text-secondary)' }} className="text-sm">
+              {isLogin ? 'Melde dich an, um fortzufahren' : 'Erstelle dein kostenloses Konto'}
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
+              <label htmlFor="email" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+                E-Mail
+              </label>
               <input
+                id="email"
                 type="email"
                 name="email"
                 autoComplete="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className={`appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 ${
-                  isLogin ? 'rounded-t-md' : ''
-                } focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
-                placeholder="E-Mail"
+                className="input"
+                placeholder="deine@email.de"
               />
             </div>
+
             <div>
+              <label htmlFor="password" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+                Passwort
+              </label>
               <input
+                id="password"
                 type="password"
                 name="password"
                 autoComplete="current-password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Passwort"
+                className="input"
+                placeholder="••••••••"
               />
             </div>
-          </div>
 
-          {error && (
-            <div className="text-red-600 text-sm text-center">{error}</div>
-          )}
+            {error && (
+              <div className="glass rounded-xl p-3 text-red-600 text-sm text-center animate-fade-in"
+                   style={{ background: 'rgba(239, 68, 68, 0.1)' }}>
+                {error}
+              </div>
+            )}
 
-          <div>
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+              className="btn-primary w-full"
             >
-              {loading ? 'Wird verarbeitet...' : (isLogin ? 'Anmelden' : 'Registrieren')}
+              {loading ? (
+                <span className="flex items-center justify-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Wird verarbeitet...
+                </span>
+              ) : (
+                isLogin ? 'Anmelden' : 'Registrieren'
+              )}
             </button>
-          </div>
+          </form>
 
-          <div className="text-center">
+          <div className="mt-6 text-center">
             <button
               type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-indigo-600 hover:text-indigo-500"
+              onClick={() => {
+                setIsLogin(!isLogin)
+                setError('')
+              }}
+              className="text-sm transition-colors"
+              style={{ color: 'var(--primary)' }}
             >
-              {isLogin ? 'Noch kein Konto? Registrieren' : 'Bereits ein Konto? Anmelden'}
+              {isLogin ? (
+                <>Noch kein Konto? <span className="font-semibold">Jetzt registrieren</span></>
+              ) : (
+                <>Bereits ein Konto? <span className="font-semibold">Jetzt anmelden</span></>
+              )}
             </button>
           </div>
-        </form>
+        </div>
+
+        {/* Footer */}
+        <div className="text-center mt-6 text-white/60 text-sm">
+          <p>© 2025 Berichtsheft • Professionell & Modern</p>
+        </div>
       </div>
     </div>
   )

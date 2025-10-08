@@ -4,11 +4,11 @@ import { hashPassword, generateToken } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, name } = await request.json()
+    const { email, password } = await request.json()
 
-    if (!email || !password || !name) {
+    if (!email || !password) {
       return NextResponse.json(
-        { error: 'All fields are required' },
+        { error: 'Email und Passwort sind erforderlich' },
         { status: 400 }
       )
     }
@@ -19,18 +19,21 @@ export async function POST(request: NextRequest) {
 
     if (existingUser) {
       return NextResponse.json(
-        { error: 'User already exists' },
+        { error: 'Benutzer existiert bereits' },
         { status: 400 }
       )
     }
 
     const hashedPassword = await hashPassword(password)
 
+    // Extract name from email (part before @)
+    const nameFromEmail = email.split('@')[0]
+
     const user = await prisma.user.create({
       data: {
         email,
         password: hashedPassword,
-        name
+        name: nameFromEmail
       }
     })
 
@@ -43,7 +46,7 @@ export async function POST(request: NextRequest) {
         email: user.email,
         name: user.name
       },
-      requiresSetup: true // Zeigt an, dass Einstellungen konfiguriert werden müssen
+      requiresSetup: true
     })
 
     response.cookies.set('token', token, {
