@@ -397,10 +397,26 @@ export default function Dashboard() {
 
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <div className="flex justify-between items-center mb-6">
+    <div className="min-h-screen p-4 md:p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="glass-strong rounded-3xl p-6 mb-6 animate-slide-in">
+          {/* Modern Header */}
+          <div className="text-center mb-6">
+            <h1 className="text-3xl md:text-4xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
+              📝 Berichtsheft
+            </h1>
+            <div className="flex items-center justify-center gap-2 text-lg md:text-xl" style={{ color: 'var(--text-secondary)' }}>
+              <span className="font-semibold">KW {format(currentWeekStart, 'I', { locale: de })}</span>
+              <span className="text-sm">•</span>
+              <span>{format(currentWeekStart, 'yyyy', { locale: de })}</span>
+            </div>
+            <p className="text-sm mt-1" style={{ color: 'var(--text-tertiary)' }}>
+              {format(currentWeekStart, 'dd.MM.yyyy', { locale: de })} - {format(weekEnd, 'dd.MM.yyyy', { locale: de })}
+            </p>
+          </div>
+
+          {/* Navigation */}
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
             <h1 className="text-2xl font-bold text-gray-900">
               Berichtsheft - KW {format(currentWeekStart, 'I', { locale: de })} / {format(currentWeekStart, 'yyyy', { locale: de })}
             </h1>
