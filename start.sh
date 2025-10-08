@@ -1,7 +1,16 @@
 #!/bin/bash
 set -e
 
+PORT=${PORT:-9455}
+
 echo "🚀 Starting Berichtsheft Application..."
+
+# Stop any existing process on the port
+if command -v fuser &> /dev/null; then
+  echo "🛑 Checking for existing process on port $PORT..."
+  fuser -k $PORT/tcp 2>/dev/null || true
+  sleep 1
+fi
 
 # Check if .env exists
 if [ ! -f .env ]; then
@@ -36,5 +45,5 @@ if [ ! -d ".next" ]; then
 fi
 
 # Start the server
-echo "✅ Starting server on port ${PORT:-9455}..."
-PORT=${PORT:-9455} npm start
+echo "✅ Starting server on port $PORT..."
+PORT=$PORT npm start
