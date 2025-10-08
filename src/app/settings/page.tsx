@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import TrainingProfessionSearch from '@/components/TrainingProfessionSearch'
+import VacationManager from '@/components/VacationManager'
 
 interface UserSettings {
   name: string
@@ -385,6 +386,13 @@ export default function SettingsPage() {
             </div>
           </form>
         </div>
+
+        {/* Ferienverwaltung */}
+        {!isWelcome && (
+          <div className="mt-8">
+            <VacationManager />
+          </div>
+        )}
       </div>
     </div>
   )

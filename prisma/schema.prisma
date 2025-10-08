@@ -39,8 +39,9 @@ model User {
   sundayHours      Float   @default(8.0)
 
   entries   Entry[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  vacations VacationPeriod[]
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
 }
 
 model Entry {
@@ -82,4 +83,18 @@ model TrainingProfession {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model VacationPeriod {
+  id          String   @id @default(cuid())
+  userId      String
+  startDate   DateTime
+  endDate     DateTime
+  description String? // Optional: "Sommerferien", "Weihnachtsferien", etc.
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startDate, endDate])
 }

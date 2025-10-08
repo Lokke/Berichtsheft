@@ -75,6 +75,15 @@ export async function GET(request: NextRequest) {
 
     console.log(`📦 Found ${entries.length} entries in database`)
 
+    // Get vacation periods
+    const vacations = await prisma.vacationPeriod.findMany({
+      where: {
+        userId: decoded.userId
+      }
+    })
+
+    console.log(`🏖️ Found ${vacations.length} vacation periods`)
+
     const formattedEntries = entries.map((entry: any) => {
       let content = ''
       
@@ -152,6 +161,30 @@ export async function GET(request: NextRequest) {
     console.log(`📅 Training start: ${trainingStartDate.toLocaleDateString('de-DE')}`)
     console.log(`📅 First Monday: ${firstMonday.toLocaleDateString('de-DE')}`)
     
+    // Helper function to check if a date is in vacation period
+    const isVacationDay = (date: Date): boolean => {
+      // Normalize date to midnight local time for comparison
+      const checkDate = new Date(date)
+      checkDate.setHours(0, 0, 0, 0)
+      const checkTime = checkDate.getTime()
+      
+      return vacations.some((vacation: any) => {
+        // Parse dates and normalize to midnight local time
+        const start = new Date(vacation.startDate)
+        start.setHours(0, 0, 0, 0)
+        
+        const end = new Date(vacation.endDate)
+        end.setHours(23, 59, 59, 999) // End of day
+        
+        const startTime = start.getTime()
+        const endTime = end.getTime()
+        
+        console.log(`🏖️ Checking vacation: ${start.toLocaleDateString('de-DE')} - ${end.toLocaleDateString('de-DE')} vs ${checkDate.toLocaleDateString('de-DE')}`)
+        
+        return checkTime >= startTime && checkTime <= endTime
+      })
+    }
+    
     formattedEntries.forEach((entry: { date: Date; content: string }) => {
       // Use UTC components to avoid timezone issues
       const entryDate = new Date(entry.date)
@@ -223,8 +256,22 @@ export async function GET(request: NextRequest) {
         user.sundayEnabled     // 6 = Sunday
       ]
       
+      // Extract week number from weekKey
+      const weekMatch = weekKey.match(/W(\d+)$/)
+      const weekNumber = weekMatch ? parseInt(weekMatch[1]) : 1
+      const weekMonday = new Date(firstMonday)
+      weekMonday.setDate(firstMonday.getDate() + (weekNumber - 1) * 7)
+      
       for (let day = 0; day < 7; day++) {
-        if (enabledDays[day]) {
+        // Calculate the actual date for this day
+        const dayDate = new Date(weekMonday)
+        dayDate.setDate(weekMonday.getDate() + day)
+        
+        // Check if this day is a vacation day
+        if (isVacationDay(dayDate)) {
+          activities[day] = 'Ferien (0h)'
+          console.log(`   🏖️ Day ${day} (${['Mo','Di','Mi','Do','Fr','Sa','So'][day]}): Vacation`)
+        } else if (enabledDays[day]) {
           activities[day] = weekData[day] || '' // Empty if no entry for this day
           if (weekData[day]) {
             console.log(`   ✅ Day ${day} (${['Mo','Di','Mi','Do','Fr','Sa','So'][day]}): "${weekData[day]}"`)
@@ -237,20 +284,35 @@ export async function GET(request: NextRequest) {
       
       console.log(`   📋 Final activities array for ${weekKey}:`, activities)
       
-      // Calculate week start date
-      const weekMatch = weekKey.match(/W(\d+)$/)
-      const weekNum = weekMatch ? parseInt(weekMatch[1]) : 1
-      const weekStartDate = new Date(firstMonday)
-      weekStartDate.setDate(firstMonday.getDate() + (weekNum - 1) * 7)
+      // weekNumber and weekMonday already calculated above, use them
+      const weekStartDate = new Date(weekMonday)
       
-      // Calculate total hours based on user configuration
-      const totalHours = (user.mondayEnabled ? user.mondayHours : 0) +
-                        (user.tuesdayEnabled ? user.tuesdayHours : 0) +
-                        (user.wednesdayEnabled ? user.wednesdayHours : 0) +
-                        (user.thursdayEnabled ? user.thursdayHours : 0) +
-                        (user.fridayEnabled ? user.fridayHours : 0) +
-                        (user.saturdayEnabled ? user.saturdayHours : 0) +
-                        (user.sundayEnabled ? user.sundayHours : 0)
+      // Calculate total hours based on user configuration and vacation days
+      let totalHours = 0
+      for (let day = 0; day < 7; day++) {
+        const dayDate = new Date(weekMonday)
+        dayDate.setDate(weekMonday.getDate() + day)
+        
+        if (isVacationDay(dayDate)) {
+          // Vacation days have 0 hours
+          continue
+        }
+        
+        // Add hours only if day is enabled
+        const dayHours = [
+          user.mondayHours,
+          user.tuesdayHours,
+          user.wednesdayHours,
+          user.thursdayHours,
+          user.fridayHours,
+          user.saturdayHours,
+          user.sundayHours
+        ]
+        
+        if (enabledDays[day]) {
+          totalHours += dayHours[day]
+        }
+      }
 
       weekEntries.push({
         week: weekKey,

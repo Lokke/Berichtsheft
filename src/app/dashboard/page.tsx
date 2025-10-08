@@ -20,6 +20,13 @@ interface Entry {
   week: number
 }
 
+interface VacationPeriod {
+  id: string
+  startDate: string
+  endDate: string
+  description: string | null
+}
+
 export default function Dashboard() {
   const router = useRouter()
   const [currentWeekStart, setCurrentWeekStart] = useState(() => {
@@ -38,6 +45,7 @@ export default function Dashboard() {
   const [tempCompleted, setTempCompleted] = useState<{[key: string]: boolean}>({})
   const [loading, setLoading] = useState(false)
   const [userConfig, setUserConfig] = useState<any>(null)
+  const [vacations, setVacations] = useState<VacationPeriod[]>([])
 
   const fetchUserConfig = useCallback(async () => {
     try {
@@ -72,10 +80,45 @@ export default function Dashboard() {
     }
   }, [currentWeekStart])
 
+  const fetchVacations = useCallback(async () => {
+    try {
+      const response = await fetch('/api/user/vacations')
+      if (response.ok) {
+        const data = await response.json()
+        setVacations(data)
+      }
+    } catch (error) {
+      console.error('Failed to fetch vacations:', error)
+    }
+  }, [])
+
   useEffect(() => {
     fetchUserConfig()
     fetchEntries()
-  }, [fetchUserConfig, fetchEntries])
+    fetchVacations()
+  }, [fetchUserConfig, fetchEntries, fetchVacations])
+
+  // Helper: Check if date is in vacation period
+  const isVacationDay = (date: Date): boolean => {
+    // Normalize date to midnight local time for comparison
+    const checkDate = new Date(date)
+    checkDate.setHours(0, 0, 0, 0)
+    const checkTime = checkDate.getTime()
+    
+    return vacations.some(vacation => {
+      // Parse dates and normalize to midnight local time
+      const start = new Date(vacation.startDate)
+      start.setHours(0, 0, 0, 0)
+      
+      const end = new Date(vacation.endDate)
+      end.setHours(23, 59, 59, 999) // End of day
+      
+      const startTime = start.getTime()
+      const endTime = end.getTime()
+      
+      return checkTime >= startTime && checkTime <= endTime
+    })
+  }
 
   // Helper: Get activities for a specific date
   const getActivitiesForDate = (date: Date): ActivityEntry[] => {
@@ -390,12 +433,15 @@ export default function Dashboard() {
               const dayDate = format(day, 'dd.MM.yyyy', { locale: de })
               const isToday = isSameDay(day, new Date())
               const isDayEnabled = isWeekdayEnabled(day)
+              const isVacation = isVacationDay(day)
               
               return (
                 <div
                   key={day.toISOString()}
                   className={`bg-white rounded-lg border-2 p-4 transition-all ${
-                    !isDayEnabled
+                    isVacation
+                      ? 'border-purple-300 bg-purple-50 cursor-default'
+                      : !isDayEnabled
                       ? 'opacity-50 border-gray-200 bg-gray-100 cursor-not-allowed'
                       : editingDate && isSameDay(day, new Date(editingDate + 'T00:00:00'))
                       ? 'border-blue-500 bg-blue-50 cursor-pointer'
@@ -406,7 +452,7 @@ export default function Dashboard() {
                       : 'border-gray-200 hover:border-gray-300 cursor-pointer'
                   }`}
                   onClick={() => {
-                    if (!isDayEnabled) return // Verhindere Klicks auf deaktivierte Tage
+                    if (!isDayEnabled || isVacation) return // Verhindere Klicks auf deaktivierte Tage und Ferientage
                     toggleEditMode(day)
                   }}
                 >
@@ -423,14 +469,19 @@ export default function Dashboard() {
                           Heute
                         </span>
                       )}
+                      {isVacation && (
+                        <span className="px-2 py-1 bg-purple-600 text-white text-xs rounded-full">
+                          🏖️ Ferien
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
-                      {entry && entry.activities && entry.activities.length > 0 && (
+                      {entry && entry.activities && entry.activities.length > 0 && !isVacation && (
                         <span className="text-green-600" title="Abgeschlossen">
                           ✅
                         </span>
                       )}
-                      {!entry && isPast(day) && !isToday && (
+                      {!entry && isPast(day) && !isToday && !isVacation && (
                         <span className="text-red-600" title="Kein Eintrag">
                           ⚠️
                         </span>
@@ -440,7 +491,11 @@ export default function Dashboard() {
                   
                   {/* Aktivitäten anzeigen oder Inline-Editing */}
                   <div className="space-y-2">
-                    {!isDayEnabled ? (
+                    {isVacation ? (
+                      <div className="text-sm text-purple-700 italic flex items-center gap-2">
+                        🏖️ Ferientag (0 Stunden)
+                      </div>
+                    ) : !isDayEnabled ? (
                       <div className="text-sm text-gray-500 italic flex items-center gap-2">
                         🚫 Dieser Wochentag ist in Ihren Arbeitszeit-Einstellungen deaktiviert
                       </div>
