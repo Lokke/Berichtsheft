@@ -283,3 +283,39 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const token = request.cookies.get('token')?.value
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const decoded = verifyToken(token)
+    if (!decoded) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const date = searchParams.get('date')
+    
+    if (!date) {
+      return NextResponse.json({ error: 'Date is required' }, { status: 400 })
+    }
+
+    const entryDate = new Date(date)
+    
+    // Delete the entry and all associated activities
+    await prisma.entry.deleteMany({
+      where: {
+        userId: decoded.userId,
+        date: entryDate
+      }
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Delete entry error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}

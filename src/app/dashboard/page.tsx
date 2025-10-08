@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { format, eachDayOfInterval, isSameDay, isPast } from 'date-fns'
 import { de } from 'date-fns/locale'
+import ThemeToggle from '@/components/ThemeToggle'
 
 interface ActivityEntry {
   id?: string
@@ -192,22 +193,37 @@ export default function Dashboard() {
 
   // Helper: Remove activity from specific date
   const removeActivityFromDate = (date: Date, index: number) => {
+    console.log('🔥 REMOVE ACTIVITY called')
+    console.log('  Date:', format(date, 'yyyy-MM-dd'))
+    console.log('  Index to remove:', index)
+    
     const currentActivities = getActivitiesForDate(date)
+    console.log('  Current activities:', currentActivities)
+    
     const totalHours = getWorkHoursForDay(date)
+    console.log('  Total work hours:', totalHours)
     
     // Remove activity
     const newActivities = currentActivities.filter((_, i) => i !== index)
+    console.log('  New activities (after filter):', newActivities)
     
     // Redistribute hours among remaining activities
     if (newActivities.length > 0) {
       const distributedHours = distributeHours(totalHours, newActivities.length)
+      console.log('  Distributed hours:', distributedHours)
+      
       const activitiesWithHours = newActivities.map((activity, i) => ({
         ...activity,
         duration: distributedHours[i]
       }))
+      console.log('  Activities with redistributed hours:', activitiesWithHours)
+      
       setActivitiesForDate(date, activitiesWithHours)
+      console.log('  ✅ State updated with redistributed activities')
     } else {
+      console.log('  ⚠️ No activities remaining - setting empty array')
       setActivitiesForDate(date, [])
+      console.log('  ✅ State updated with empty array')
     }
   }
 
@@ -219,22 +235,78 @@ export default function Dashboard() {
     ))
   }
 
-  const saveEntry = async (date: Date, closeEditMode = true) => {
+  const saveEntry = async (date: Date, closeEditMode = true, forcedActivities?: ActivityEntry[]) => {
     const dateKey = format(date, 'yyyy-MM-dd')
-    const activities = getActivitiesForDate(date)
+    const activities = forcedActivities ?? getActivitiesForDate(date)
     const isCompleted = tempCompleted[dateKey] ?? false
+    
+    console.log('💾 SAVE ENTRY called')
+    console.log('  Date:', dateKey)
+    console.log('  Activities:', activities)
+    console.log('  Forced activities?', forcedActivities ? 'YES' : 'NO')
+    console.log('  closeEditMode:', closeEditMode)
     
     // Filter out empty activities
     const validActivities = activities.filter(a => a.description.trim())
+    console.log('  Valid activities (filtered):', validActivities)
     
     // Remove empty activities from temp state
     if (validActivities.length !== activities.length) {
       setActivitiesForDate(date, validActivities)
+      console.log('  ⚠️ Removed empty activities from temp state')
     }
     
-    // Don't save if no valid activities
-    if (validActivities.length === 0) return
+    // If no valid activities, delete the entry from database
+    if (validActivities.length === 0) {
+      console.log('  🗑️ No valid activities - attempting DELETE')
+      try {
+        const existingEntry = getEntryForDate(date)
+        console.log('  Existing entry in DB:', existingEntry)
+        
+        if (existingEntry) {
+          console.log('  📤 Sending DELETE request...')
+          // Delete the entry via API
+          const response = await fetch(`/api/entries?date=${format(date, 'yyyy-MM-dd')}`, {
+            method: 'DELETE'
+          })
+          
+          console.log('  DELETE response status:', response.status)
+          
+          if (response.ok) {
+            console.log('  ✅ DELETE successful, fetching entries...')
+            await fetchEntries()
+            console.log('  ✅ Entries refreshed')
+          } else {
+            console.error('  ❌ DELETE failed:', await response.text())
+          }
+        } else {
+          console.log('  ℹ️ No existing entry in DB - nothing to delete')
+        }
+        
+        // Clear temp state
+        setTempActivities(prev => {
+          const newState = { ...prev }
+          delete newState[dateKey]
+          return newState
+        })
+        setTempCompleted(prev => {
+          const newState = { ...prev }
+          delete newState[dateKey]
+          return newState
+        })
+        console.log('  🧹 Temp state cleared')
+        
+        if (closeEditMode) {
+          setEditingDate(null)
+          console.log('  🔒 Edit mode closed')
+        }
+      } catch (error) {
+        console.error('  ❌ Error during DELETE:', error)
+      }
+      return
+    }
 
+    console.log('  📤 Sending POST request with activities...')
     try {
         const response = await fetch('/api/entries', {
           method: 'POST',
@@ -246,8 +318,13 @@ export default function Dashboard() {
           })
         })
 
+        console.log('  POST response status:', response.status)
+
         if (response.ok) {
+          console.log('  ✅ POST successful, fetching entries...')
           await fetchEntries()
+          console.log('  ✅ Entries refreshed')
+          
           // Clear temp state for this date
           setTempActivities(prev => {
             const newState = { ...prev }
@@ -259,12 +336,17 @@ export default function Dashboard() {
             delete newState[dateKey]
             return newState
           })
+          console.log('  🧹 Temp state cleared')
+          
           if (closeEditMode) {
             setEditingDate(null)
+            console.log('  🔒 Edit mode closed')
           }
+        } else {
+          console.error('  ❌ POST failed:', await response.text())
         }
       } catch (error) {
-        console.error('Fehler beim Speichern:', error)
+        console.error('  ❌ Error during POST:', error)
       }
   }
 
@@ -410,6 +492,7 @@ export default function Dashboard() {
 
             {/* Right: Actions */}
             <div className="flex items-center gap-2">
+              <ThemeToggle />
               <button
                 onClick={generateAllWeeksPDF}
                 className="btn-primary px-3 py-1.5 text-xs md:text-sm flex items-center gap-1.5"
@@ -420,7 +503,12 @@ export default function Dashboard() {
               </button>
               <button
                 onClick={() => router.push('/settings')}
-                className="btn-secondary px-3 py-1.5 text-sm"
+                className="px-3 py-1.5 text-sm rounded-xl transition-all"
+                style={{
+                  background: 'rgba(0, 0, 0, 0.02)',
+                  border: '2px solid rgba(0, 0, 0, 0.1)',
+                  color: 'var(--text-secondary)'
+                }}
                 title="Einstellungen"
               >
                 ⚙️
@@ -433,7 +521,12 @@ export default function Dashboard() {
             <div className="flex items-center gap-2">
               <button
                 onClick={goToPreviousWeek}
-                className="btn-secondary px-3 py-1.5 text-sm"
+                className="px-3 py-1.5 text-sm rounded-xl transition-all"
+                style={{
+                  background: 'rgba(0, 0, 0, 0.02)',
+                  border: '2px solid rgba(0, 0, 0, 0.1)',
+                  color: 'var(--text-secondary)'
+                }}
                 title="Vorwoche"
               >
                 ←
@@ -446,7 +539,12 @@ export default function Dashboard() {
               </button>
               <button
                 onClick={goToNextWeek}
-                className="btn-secondary px-3 py-1.5 text-sm"
+                className="px-3 py-1.5 text-sm rounded-xl transition-all"
+                style={{
+                  background: 'rgba(0, 0, 0, 0.02)',
+                  border: '2px solid rgba(0, 0, 0, 0.1)',
+                  color: 'var(--text-secondary)'
+                }}
                 title="Nächste Woche"
               >
                 →
@@ -527,8 +625,9 @@ export default function Dashboard() {
                       <span className="font-bold text-base" style={{ color: '#7c3aed' }}>Ferientag</span>
                     </div>
                   ) : !isDayEnabled ? (
-                    <div className="text-sm italic flex items-center gap-2 px-3 py-2 rounded-xl glass-strong" style={{ color: 'var(--text-tertiary)' }}>
-                      🚫 Dieser Wochentag ist deaktiviert
+                    <div className="text-sm flex items-center gap-2 px-3 py-2 rounded-xl glass-strong" style={{ color: 'var(--text-tertiary)' }}>
+                      <span className="not-italic">🚫</span>
+                      <span className="italic">Dieser Wochentag ist deaktiviert</span>
                     </div>
                   ) : (
                     <>
@@ -552,13 +651,13 @@ export default function Dashboard() {
                             {isEditing ? (
                               /* Edit Mode */
                               <div 
-                                className="flex-1 flex gap-2 items-center p-3 rounded-lg border-2" 
+                                className="flex-1 flex gap-2 items-center p-3 rounded-lg" 
                                 style={{
                                   background: 'rgba(0, 0, 0, 0.03)',
-                                  borderColor: accentColor
+                                  border: `2px solid ${accentColor}`
                                 }}
                               >
-                                <div className="flex-1">
+                                <div className="flex-1 min-h-[1.25rem]">
                                   <input
                                     type="text"
                                     value={activityItem.description}
@@ -586,7 +685,7 @@ export default function Dashboard() {
                                       }
                                     }}
                                     placeholder="Tätigkeit eingeben..."
-                                    className="w-full bg-transparent outline-none text-sm font-medium"
+                                    className="w-full bg-transparent outline-none text-sm font-medium leading-tight"
                                     style={{ color: accentColor }}
                                     autoFocus
                                     onClick={(e) => e.stopPropagation()}
@@ -646,17 +745,54 @@ export default function Dashboard() {
                                     e.preventDefault()
                                     e.stopPropagation()
                                   }}
-                                  onClick={(e) => {
+                                  onClick={async (e) => {
                                     e.stopPropagation()
-                                    removeActivityFromDate(day, index)
-                                    saveEntry(day)
+                                    console.log('🗑️ DELETE BUTTON CLICKED')
+                                    console.log('  Date:', format(day, 'yyyy-MM-dd'))
+                                    console.log('  Index:', index)
+                                    
+                                    const currentActivities = getActivitiesForDate(day)
+                                    console.log('  Current activities BEFORE delete:', currentActivities)
+                                    
+                                    // Calculate new activities directly
+                                    const totalHours = getWorkHoursForDay(day)
+                                    const newActivities = currentActivities.filter((_, i) => i !== index)
+                                    console.log('  New activities (after filter):', newActivities)
+                                    
+                                    let activitiesToSave: ActivityEntry[]
+                                    
+                                    // Update state with calculated activities
+                                    if (newActivities.length > 0) {
+                                      const distributedHours = distributeHours(totalHours, newActivities.length)
+                                      activitiesToSave = newActivities.map((activity, i) => ({
+                                        ...activity,
+                                        duration: distributedHours[i]
+                                      }))
+                                      console.log('  Activities with redistributed hours:', activitiesToSave)
+                                      setActivitiesForDate(day, activitiesToSave)
+                                    } else {
+                                      console.log('  No activities remaining - setting empty array')
+                                      activitiesToSave = []
+                                      setActivitiesForDate(day, [])
+                                    }
+                                    
+                                    // Save with the calculated activities (don't wait for state)
+                                    console.log('  📤 Calling saveEntry with forced activities...')
+                                    await saveEntry(day, true, activitiesToSave)
+                                    console.log('  ✅ saveEntry completed')
+                                    
                                     setEditingDate(null)
+                                    console.log('  ✅ Edit mode closed')
                                   }}
-                                  className="px-2 py-1 text-red-500 text-sm rounded-lg hover:bg-red-50 transition-colors font-bold"
+                                  className="h-[26px] w-[26px] flex items-center justify-center text-white text-xs rounded-full hover:opacity-80 transition-opacity font-bold"
+                                  style={{ 
+                                    backgroundColor: accentColor,
+                                    boxShadow: `0 2px 8px ${accentColor}40`
+                                  }}
                                   title="Löschen"
                                   type="button"
                                 >
-                                  ×
+                                  ✕
                                 </button>
                                 <button
                                   onMouseDown={(e) => {
@@ -673,12 +809,15 @@ export default function Dashboard() {
                                     const newIndex = getActivitiesForDate(day).length - 1
                                     setEditingDate(`${format(day, 'yyyy-MM-dd')}-${newIndex}`)
                                   }}
-                                  className="px-2 py-1 text-sm rounded-lg hover:bg-purple-50 transition-colors font-bold"
-                                  style={{ color: accentColor }}
+                                  className="h-[26px] w-[26px] flex items-center justify-center text-white text-xs rounded-full hover:opacity-80 transition-opacity font-bold"
+                                  style={{ 
+                                    backgroundColor: accentColor,
+                                    boxShadow: `0 2px 8px ${accentColor}40`
+                                  }}
                                   title="Weitere Tätigkeit hinzufügen"
                                   type="button"
                                 >
-                                  +
+                                  <span style={{ transform: 'rotate(45deg)', display: 'inline-block' }}>✕</span>
                                 </button>
                               </div>
                             ) : (
@@ -694,7 +833,7 @@ export default function Dashboard() {
                                   setEditingDate(`${format(day, 'yyyy-MM-dd')}-${index}`)
                                 }}
                               >
-                                <span className="text-sm font-medium" style={{ 
+                                <span className="text-sm font-medium leading-tight min-h-[1.25rem] inline-block" style={{ 
                                   color: accentColor,
                                   textShadow: `0 0 30px ${accentColor}80, 0 0 15px ${accentColor}60, 0 0 8px ${accentColor}40, 0 1px 3px rgba(0,0,0,0.3)`
                                 }}>

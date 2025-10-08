@@ -118,40 +118,68 @@ export default function VacationManager() {
   }
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-6">Ferienverwaltung</h2>
+    <div>
+      <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>
+        🏖️ Ferienverwaltung
+      </h2>
 
       {/* Formular zum Hinzufügen */}
       <form onSubmit={handleAddVacation} className="mb-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
               Startdatum
             </label>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-transparent outline-none text-sm font-medium p-3 rounded-lg border-2 transition-all"
+              style={{
+                background: 'rgba(0, 0, 0, 0.02)',
+                borderColor: 'rgba(0, 0, 0, 0.1)',
+                color: 'var(--text-primary)'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#7c3aed'
+                e.target.style.background = 'rgba(0, 0, 0, 0.03)'
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = 'rgba(0, 0, 0, 0.1)'
+                e.target.style.background = 'rgba(0, 0, 0, 0.02)'
+              }}
               required
             />
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
               Enddatum
             </label>
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-transparent outline-none text-sm font-medium p-3 rounded-lg border-2 transition-all"
+              style={{
+                background: 'rgba(0, 0, 0, 0.02)',
+                borderColor: 'rgba(0, 0, 0, 0.1)',
+                color: 'var(--text-primary)'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#ec4899'
+                e.target.style.background = 'rgba(0, 0, 0, 0.03)'
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = 'rgba(0, 0, 0, 0.1)'
+                e.target.style.background = 'rgba(0, 0, 0, 0.02)'
+              }}
               required
             />
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
               Beschreibung (optional)
             </label>
             <input
@@ -159,7 +187,20 @@ export default function VacationManager() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="z.B. Sommerferien"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-transparent outline-none text-sm font-medium p-3 rounded-lg border-2 transition-all"
+              style={{
+                background: 'rgba(0, 0, 0, 0.02)',
+                borderColor: 'rgba(0, 0, 0, 0.1)',
+                color: 'var(--text-primary)'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#14b8a6'
+                e.target.style.background = 'rgba(0, 0, 0, 0.03)'
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = 'rgba(0, 0, 0, 0.1)'
+                e.target.style.background = 'rgba(0, 0, 0, 0.02)'
+              }}
             />
           </div>
         </div>
@@ -167,63 +208,108 @@ export default function VacationManager() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full md:w-auto px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+          className="w-full md:w-auto px-6 py-3 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{
+            background: loading ? 'rgba(124, 58, 237, 0.5)' : 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%)',
+            color: 'white',
+            boxShadow: loading ? 'none' : '0 4px 14px rgba(20, 184, 166, 0.4)'
+          }}
         >
-          {loading ? 'Wird hinzugefügt...' : 'Ferienperiode hinzufügen'}
+          {loading ? '⏳ Wird hinzugefügt...' : '➕ Ferienperiode hinzufügen'}
         </button>
 
         {message && (
-          <p className={`mt-4 text-sm ${message.includes('erfolgreich') ? 'text-green-600' : 'text-red-600'}`}>
-            {message}
-          </p>
+          <div className={`mt-4 p-4 rounded-xl border-2`} style={{
+            background: 'rgba(0, 0, 0, 0.02)',
+            borderColor: message.includes('erfolgreich') ? '#10b981' : '#ef4444',
+            boxShadow: message.includes('erfolgreich') 
+              ? '0 2px 12px rgba(16, 185, 129, 0.2)' 
+              : '0 2px 12px rgba(239, 68, 68, 0.2)'
+          }}>
+            <p className="text-sm font-medium flex items-center gap-2" style={{
+              color: message.includes('erfolgreich') ? '#10b981' : '#ef4444'
+            }}>
+              <span>{message.includes('erfolgreich') ? '✓' : '⚠️'}</span>
+              {message}
+            </p>
+          </div>
         )}
       </form>
 
       {/* Liste der Ferienperioden */}
       <div>
-        <h3 className="text-lg font-semibold mb-4">Eingetragene Ferien ({vacations.length})</h3>
+        <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+          Eingetragene Ferien ({vacations.length})
+        </h3>
         
         {vacations.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">
-            Noch keine Ferienperioden eingetragen
-          </p>
+          <div className="text-center py-8 rounded-xl border-2 backdrop-blur-sm" style={{ 
+            background: 'rgba(0, 0, 0, 0.03)',
+            borderColor: 'rgba(0, 0, 0, 0.1)',
+            color: 'var(--text-tertiary)' 
+          }}>
+            📭 Noch keine Ferienperioden eingetragen
+          </div>
         ) : (
           <div className="space-y-3">
-            {vacations.map((vacation) => (
-              <div
-                key={vacation.id}
-                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-1">
-                    <span className="text-sm font-medium text-gray-900">
-                      {formatDateRange(vacation.startDate, vacation.endDate)}
-                    </span>
-                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                      {calculateDays(vacation.startDate, vacation.endDate)} Tage
-                    </span>
-                  </div>
-                  {vacation.description && (
-                    <p className="text-sm text-gray-600">{vacation.description}</p>
-                  )}
-                </div>
-                
-                <button
-                  onClick={() => handleDeleteVacation(vacation.id)}
-                  className="ml-4 px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                  title="Löschen"
+            {vacations.map((vacation, index) => {
+              const color = index % 4 === 0 ? '#7c3aed' : 
+                           index % 4 === 1 ? '#ec4899' : 
+                           index % 4 === 2 ? '#14b8a6' : 
+                           '#f97316'
+              
+              return (
+                <div
+                  key={vacation.id}
+                  className="flex items-center justify-between p-4 rounded-xl transition-all hover:shadow-md"
+                  style={{
+                    background: 'rgba(0, 0, 0, 0.02)',
+                    border: `2px solid ${color}40`
+                  }}
                 >
-                  🗑️ Löschen
-                </button>
-              </div>
-            ))}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-1">
+                      <span className="text-sm font-semibold" style={{ color }}>
+                        {formatDateRange(vacation.startDate, vacation.endDate)}
+                      </span>
+                      <span className="text-xs px-3 py-1 rounded-full font-bold text-white" style={{
+                        background: color,
+                        boxShadow: `0 2px 8px ${color}40`
+                      }}>
+                        {calculateDays(vacation.startDate, vacation.endDate)} Tage
+                      </span>
+                    </div>
+                    {vacation.description && (
+                      <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                        {vacation.description}
+                      </p>
+                    )}
+                  </div>
+                  
+                  <button
+                    onClick={() => handleDeleteVacation(vacation.id)}
+                    className="ml-4 h-[32px] w-[32px] flex items-center justify-center text-white rounded-full hover:opacity-80 transition-all font-bold"
+                    style={{
+                      backgroundColor: '#ef4444',
+                      boxShadow: '0 2px 8px rgba(239, 68, 68, 0.4)'
+                    }}
+                    title="Löschen"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )
+            })}
           </div>
         )}
       </div>
 
-      <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-        <p className="text-sm text-gray-700">
-          <strong>Hinweis:</strong> Ferientage werden im Dashboard markiert und im PDF mit 0 Stunden angezeigt.
+      <div className="mt-6 p-4 rounded-xl border-2 backdrop-blur-sm" style={{ 
+        background: 'rgba(59, 130, 246, 0.1)',
+        borderColor: 'rgba(59, 130, 246, 0.3)' 
+      }}>
+        <p className="text-sm" style={{ color: 'var(--text-primary)' }}>
+          <strong>💡 Hinweis:</strong> Ferientage werden im Dashboard markiert und im PDF mit 0 Stunden angezeigt.
         </p>
       </div>
     </div>

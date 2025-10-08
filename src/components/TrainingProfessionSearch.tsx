@@ -26,13 +26,14 @@ export default function TrainingProfessionSearch({
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedProfession, setSelectedProfession] = useState<TrainingProfession | null>(null);
+  const [hasUserCleared, setHasUserCleared] = useState(false);
 
-  // Initialisiere mit existierendem Namen
+  // Initialisiere mit existierendem Namen (nur beim ersten Laden)
   useEffect(() => {
-    if (initialName && !query) {
+    if (initialName && !query && !hasUserCleared) {
       setQuery(initialName);
     }
-  }, [initialName, query]);
+  }, [initialName, query, hasUserCleared]);
 
   // Lade die ausgewählte Profession beim Initialisieren über ID
   useEffect(() => {
@@ -79,6 +80,11 @@ export default function TrainingProfessionSearch({
     setQuery(newQuery);
     setSelectedProfession(null);
     
+    // Wenn User das Feld leert, markiere es als manuell geleert
+    if (newQuery === '') {
+      setHasUserCleared(true);
+    }
+    
     if (newQuery.length > 1) {
       setIsOpen(true);
       searchProfessions(newQuery);
@@ -92,6 +98,7 @@ export default function TrainingProfessionSearch({
     setSelectedProfession(profession);
     setQuery(profession.name);
     setIsOpen(false);
+    setHasUserCleared(false); // Reset beim Auswählen
     onChange(profession.id, profession.name);
   };
 
@@ -111,6 +118,7 @@ export default function TrainingProfessionSearch({
     setSelectedProfession(null);
     setProfessions([]);
     setIsOpen(false);
+    setHasUserCleared(true); // Markiere als manuell geleert
     onChange(null, '');
   };
 
@@ -124,13 +132,27 @@ export default function TrainingProfessionSearch({
           onFocus={handleInputFocus}
           onBlur={handleInputBlur}
           placeholder={placeholder}
-          className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full bg-transparent outline-none text-sm font-medium p-3 pr-10 rounded-lg border-2 transition-all"
+          style={{
+            background: 'rgba(0, 0, 0, 0.02)',
+            borderColor: 'rgba(0, 0, 0, 0.1)',
+            color: 'var(--text-primary)'
+          }}
+          onFocusCapture={(e) => {
+            e.target.style.borderColor = '#7c3aed'
+            e.target.style.background = 'rgba(0, 0, 0, 0.03)'
+          }}
+          onBlurCapture={(e) => {
+            e.target.style.borderColor = 'rgba(0, 0, 0, 0.1)'
+            e.target.style.background = 'rgba(0, 0, 0, 0.02)'
+          }}
         />
         {query && (
           <button
             type="button"
             onClick={clearSelection}
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs font-bold hover:opacity-70 transition-opacity"
+            style={{ color: 'var(--text-tertiary)' }}
           >
             ✕
           </button>
@@ -138,22 +160,55 @@ export default function TrainingProfessionSearch({
       </div>
 
       {isOpen && (
-        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+        <div 
+          className="absolute z-50 w-full mt-1 rounded-lg max-h-60 overflow-y-auto border-2 glass-strong backdrop-blur-xl"
+          style={{
+            borderColor: 'rgba(124, 58, 237, 0.4)',
+            boxShadow: '0 8px 32px rgba(124, 58, 237, 0.25), 0 0 0 1px rgba(124, 58, 237, 0.1)'
+          }}
+        >
           {loading ? (
-            <div className="px-4 py-2 text-gray-500">Suche läuft...</div>
+            <div className="px-4 py-3 text-sm" style={{ color: 'var(--text-secondary)' }}>
+              ⏳ Suche läuft...
+            </div>
           ) : professions.length > 0 ? (
-            professions.map((profession) => (
-              <div
-                key={profession.id}
-                onClick={() => handleSelectProfession(profession)}
-                className="px-4 py-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
-              >
-                <div className="font-medium text-gray-900">{profession.name}</div>
-                <div className="text-sm text-gray-500">{profession.category}</div>
-              </div>
-            ))
+            professions.map((profession, index) => {
+              const color = index % 4 === 0 ? '#7c3aed' : 
+                           index % 4 === 1 ? '#ec4899' : 
+                           index % 4 === 2 ? '#14b8a6' : 
+                           '#f97316'
+              
+              return (
+                <div
+                  key={profession.id}
+                  onClick={() => handleSelectProfession(profession)}
+                  className="px-4 py-3 cursor-pointer border-b transition-all"
+                  style={{
+                    borderColor: 'var(--border-color)',
+                    background: 'transparent'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(0, 0, 0, 0.03)'
+                    e.currentTarget.style.borderColor = color
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent'
+                    e.currentTarget.style.borderColor = 'var(--border-color)'
+                  }}
+                >
+                  <div className="font-semibold text-sm" style={{ color }}>
+                    {profession.name}
+                  </div>
+                  <div className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
+                    {profession.category}
+                  </div>
+                </div>
+              )
+            })
           ) : query.length > 1 ? (
-            <div className="px-4 py-2 text-gray-500">Keine Ergebnisse gefunden</div>
+            <div className="px-4 py-3 text-sm" style={{ color: 'var(--text-tertiary)' }}>
+              ❌ Keine Ergebnisse gefunden
+            </div>
           ) : null}
         </div>
       )}

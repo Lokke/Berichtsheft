@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import TrainingProfessionSearch from '@/components/TrainingProfessionSearch'
 import VacationManager from '@/components/VacationManager'
+import ThemeToggle from '@/components/ThemeToggle'
 
 interface UserSettings {
   name: string
@@ -172,33 +173,51 @@ export default function SettingsPage() {
   ]
 
   return (
-    <div className="min-h-screen p-4 md:p-6">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="glass-strong rounded-3xl p-6 mb-6 animate-slide-in">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <h1 className="text-3xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
-                ⚙️ Einstellungen
-              </h1>
-              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                Verwalte deine persönlichen Daten und Arbeitszeiten
-              </p>
+    <div className="min-h-screen px-3 md:px-4">
+      <div className="max-w-6xl mx-auto">
+        {/* Header - identisch zum Dashboard */}
+        <div className="glass rounded-2xl p-4 mb-4 animate-slide-in">
+          <div className="flex items-center justify-between mb-4">
+            {/* Left: Logo + Title */}
+            <div className="flex items-center gap-2">
+              <div className="text-2xl">⚙️</div>
+              <div>
+                <h1 className="text-xl md:text-2xl font-bold leading-tight" style={{ color: 'var(--text-primary)' }}>
+                  Einstellungen
+                </h1>
+                <div className="text-xs md:text-sm" style={{ color: 'var(--text-secondary)' }}>
+                  Persönliche Daten und Konfiguration
+                </div>
+              </div>
             </div>
-            <button
-              onClick={() => router.push('/dashboard')}
-              className="btn-secondary px-4 py-2 text-sm"
-            >
-              ← Dashboard
-            </button>
+
+            {/* Right: Actions */}
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <button
+                onClick={() => router.push('/dashboard')}
+                className="px-3 py-1.5 text-sm flex items-center gap-1.5 rounded-xl transition-all"
+                style={{
+                  background: 'rgba(0, 0, 0, 0.02)',
+                  border: '2px solid rgba(0, 0, 0, 0.1)',
+                  color: 'var(--text-secondary)'
+                }}
+                title="Zurück zum Dashboard"
+              >
+                <span>←</span>
+                <span className="hidden md:inline">Dashboard</span>
+              </button>
+            </div>
           </div>
 
           {/* Willkommens-Banner für neue Benutzer */}
           {isWelcome && (
-            <div className="mt-6 p-4 rounded-2xl glass border-2 border-blue-400/30 animate-fade-in">
+            <div className="mt-4 p-4 rounded-xl glass-strong border-2 border-blue-400/30 animate-fade-in">
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{
+                    background: 'linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%)'
+                  }}>
                     <span className="text-white text-lg">💡</span>
                   </div>
                 </div>
@@ -217,16 +236,21 @@ export default function SettingsPage() {
 
           {/* Tab Navigation */}
           {!isWelcome && (
-            <div className="flex gap-2 mt-6 overflow-x-auto">
+            <div className="flex gap-2 mt-4 pt-3 border-t overflow-x-auto" style={{ borderColor: 'var(--border-color)' }}>
               {tabs.map(tab => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
-                    activeTab === tab.id
-                      ? 'btn-primary'
-                      : 'btn-secondary'
-                  }`}
+                  className="px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap"
+                  style={activeTab === tab.id ? {
+                    background: 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)',
+                    color: 'white',
+                    boxShadow: '0 4px 14px rgba(124, 58, 237, 0.4)'
+                  } : {
+                    background: 'rgba(0, 0, 0, 0.02)',
+                    border: '2px solid rgba(0, 0, 0, 0.1)',
+                    color: 'var(--text-secondary)'
+                  }}
                 >
                   <span className="mr-2">{tab.icon}</span>
                   {tab.label}
@@ -237,7 +261,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Content Container */}
-        <div className="glass rounded-3xl p-6 animate-fade-in">
+        <div className="glass rounded-2xl p-4 md:p-6 animate-fade-in">
           <form onSubmit={handleSubmit}>
             {/* Profile Tab */}
             {(activeTab === 'profile' || isWelcome) && (
@@ -256,7 +280,20 @@ export default function SettingsPage() {
                       required
                       value={settings.name}
                       onChange={(e) => handleInputChange('name', e.target.value)}
-                      className="input w-full"
+                      className="w-full bg-transparent outline-none text-sm font-medium p-3 rounded-lg border-2 transition-all"
+                      style={{
+                        background: 'rgba(0, 0, 0, 0.02)',
+                        borderColor: 'rgba(0, 0, 0, 0.1)',
+                        color: 'var(--text-primary)'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#7c3aed'
+                        e.target.style.background = 'rgba(0, 0, 0, 0.03)'
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = 'rgba(0, 0, 0, 0.1)'
+                        e.target.style.background = 'rgba(0, 0, 0, 0.02)'
+                      }}
                     />
                   </div>
 
@@ -269,7 +306,20 @@ export default function SettingsPage() {
                       required
                       value={settings.surname}
                       onChange={(e) => handleInputChange('surname', e.target.value)}
-                      className="input w-full"
+                      className="w-full bg-transparent outline-none text-sm font-medium p-3 rounded-lg border-2 transition-all"
+                      style={{
+                        background: 'rgba(0, 0, 0, 0.02)',
+                        borderColor: 'rgba(0, 0, 0, 0.1)',
+                        color: 'var(--text-primary)'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#7c3aed'
+                        e.target.style.background = 'rgba(0, 0, 0, 0.03)'
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = 'rgba(0, 0, 0, 0.1)'
+                        e.target.style.background = 'rgba(0, 0, 0, 0.02)'
+                      }}
                     />
                   </div>
                 </div>
@@ -282,7 +332,12 @@ export default function SettingsPage() {
                     type="email"
                     value={settings.email}
                     disabled
-                    className="input w-full opacity-50 cursor-not-allowed"
+                    className="w-full bg-transparent outline-none text-sm font-medium p-3 rounded-lg border-2 opacity-50 cursor-not-allowed"
+                    style={{
+                      background: 'rgba(0, 0, 0, 0.02)',
+                      borderColor: 'rgba(0, 0, 0, 0.1)',
+                      color: 'var(--text-primary)'
+                    }}
                   />
                   <p className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
                     E-Mail kann nicht geändert werden
@@ -326,7 +381,20 @@ export default function SettingsPage() {
                       value={settings.trainingClass}
                       onChange={(e) => handleInputChange('trainingClass', e.target.value)}
                       placeholder="z.B. FI-AE-22A"
-                      className="input w-full"
+                      className="w-full bg-transparent outline-none text-sm font-medium p-3 rounded-lg border-2 transition-all"
+                      style={{
+                        background: 'rgba(0, 0, 0, 0.02)',
+                        borderColor: 'rgba(0, 0, 0, 0.1)',
+                        color: 'var(--text-primary)'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#ec4899'
+                        e.target.style.background = 'rgba(0, 0, 0, 0.03)'
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = 'rgba(0, 0, 0, 0.1)'
+                        e.target.style.background = 'rgba(0, 0, 0, 0.02)'
+                      }}
                     />
                   </div>
 
@@ -338,7 +406,20 @@ export default function SettingsPage() {
                       type="text"
                       value={settings.department}
                       onChange={(e) => handleInputChange('department', e.target.value)}
-                      className="input w-full"
+                      className="w-full bg-transparent outline-none text-sm font-medium p-3 rounded-lg border-2 transition-all"
+                      style={{
+                        background: 'rgba(0, 0, 0, 0.02)',
+                        borderColor: 'rgba(0, 0, 0, 0.1)',
+                        color: 'var(--text-primary)'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#14b8a6'
+                        e.target.style.background = 'rgba(0, 0, 0, 0.03)'
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = 'rgba(0, 0, 0, 0.1)'
+                        e.target.style.background = 'rgba(0, 0, 0, 0.02)'
+                      }}
                     />
                   </div>
                 </div>
@@ -352,7 +433,20 @@ export default function SettingsPage() {
                     required
                     value={settings.trainingStartDate}
                     onChange={(e) => handleInputChange('trainingStartDate', e.target.value)}
-                    className="input w-full"
+                    className="w-full bg-transparent outline-none text-sm font-medium p-3 rounded-lg border-2 transition-all"
+                    style={{
+                      background: 'rgba(0, 0, 0, 0.02)',
+                      borderColor: 'rgba(0, 0, 0, 0.1)',
+                      color: 'var(--text-primary)'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#f97316'
+                      e.target.style.background = 'rgba(0, 0, 0, 0.03)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = 'rgba(0, 0, 0, 0.1)'
+                      e.target.style.background = 'rgba(0, 0, 0, 0.02)'
+                    }}
                   />
                   <p className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
                     Wird zur Berechnung des Ausbildungsjahres verwendet
@@ -370,49 +464,92 @@ export default function SettingsPage() {
                   
                   <div className="space-y-3">
                     {[
-                      { key: 'monday', label: 'Montag', enabled: settings.mondayEnabled, hours: settings.mondayHours },
-                      { key: 'tuesday', label: 'Dienstag', enabled: settings.tuesdayEnabled, hours: settings.tuesdayHours },
-                      { key: 'wednesday', label: 'Mittwoch', enabled: settings.wednesdayEnabled, hours: settings.wednesdayHours },
-                      { key: 'thursday', label: 'Donnerstag', enabled: settings.thursdayEnabled, hours: settings.thursdayHours },
-                      { key: 'friday', label: 'Freitag', enabled: settings.fridayEnabled, hours: settings.fridayHours },
-                      { key: 'saturday', label: 'Samstag', enabled: settings.saturdayEnabled, hours: settings.saturdayHours },
-                      { key: 'sunday', label: 'Sonntag', enabled: settings.sundayEnabled, hours: settings.sundayHours }
-                    ].map(({ key, label, enabled, hours }) => (
-                      <div key={key} className="flex items-center gap-4 p-4 glass-strong rounded-xl">
+                      { key: 'monday', label: 'Montag', enabled: settings.mondayEnabled, hours: settings.mondayHours, color: '#7c3aed' },
+                      { key: 'tuesday', label: 'Dienstag', enabled: settings.tuesdayEnabled, hours: settings.tuesdayHours, color: '#ec4899' },
+                      { key: 'wednesday', label: 'Mittwoch', enabled: settings.wednesdayEnabled, hours: settings.wednesdayHours, color: '#14b8a6' },
+                      { key: 'thursday', label: 'Donnerstag', enabled: settings.thursdayEnabled, hours: settings.thursdayHours, color: '#f97316' },
+                      { key: 'friday', label: 'Freitag', enabled: settings.fridayEnabled, hours: settings.fridayHours, color: '#7c3aed' },
+                      { key: 'saturday', label: 'Samstag', enabled: settings.saturdayEnabled, hours: settings.saturdayHours, color: '#ec4899' },
+                      { key: 'sunday', label: 'Sonntag', enabled: settings.sundayEnabled, hours: settings.sundayHours, color: '#14b8a6' }
+                    ].map(({ key, label, enabled, hours, color }) => (
+                      <div key={key} className="flex items-center gap-4 p-4 rounded-xl transition-all" style={{
+                        background: enabled ? 'rgba(0, 0, 0, 0.02)' : 'rgba(0, 0, 0, 0.01)',
+                        border: `2px solid ${enabled ? color + '40' : 'rgba(0, 0, 0, 0.05)'}`
+                      }}>
                         <div className="flex items-center flex-1">
                           <input
                             type="checkbox"
                             id={`${key}Enabled`}
                             checked={enabled}
                             onChange={(e) => handleInputChange(`${key}Enabled` as keyof UserSettings, e.target.checked.toString())}
-                            className="h-5 w-5 rounded border-2 text-purple-600 focus:ring-2 focus:ring-purple-500"
+                            className="h-5 w-5 rounded border-2 focus:ring-2 cursor-pointer transition-all"
+                            style={{
+                              accentColor: color,
+                              borderColor: enabled ? color : 'rgba(0, 0, 0, 0.2)'
+                            }}
                           />
-                          <label htmlFor={`${key}Enabled`} className="ml-3 text-sm font-medium w-28" style={{ color: 'var(--text-primary)' }}>
+                          <label htmlFor={`${key}Enabled`} className="ml-3 text-sm font-medium w-28 cursor-pointer" style={{ 
+                            color: enabled ? color : 'var(--text-tertiary)'
+                          }}>
                             {label}
                           </label>
                         </div>
                         
-                        <div className="flex items-center">
-                          <select
-                            value={hours}
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
                             disabled={!enabled}
-                            onChange={(e) => handleInputChange(`${key}Hours` as keyof UserSettings, e.target.value)}
-                            className="input px-3 py-2 text-sm disabled:opacity-40"
+                            onClick={() => {
+                              const newHours = Math.max(0, hours - 0.5)
+                              handleInputChange(`${key}Hours` as keyof UserSettings, newHours.toString())
+                            }}
+                            className="h-8 w-8 flex items-center justify-center rounded-lg font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                            style={{
+                              background: enabled ? color : 'transparent',
+                              color: enabled ? 'white' : 'var(--text-tertiary)',
+                              boxShadow: enabled ? `0 2px 8px ${color}40` : 'none'
+                            }}
                           >
-                            {Array.from({ length: 21 }, (_, i) => i * 0.5).map(value => (
-                              <option key={value} value={value}>
-                                {value.toFixed(1)}h
-                              </option>
-                            ))}
-                          </select>
+                            −
+                          </button>
+                          
+                          <div className="px-3 py-2 min-w-[4rem] text-center text-sm rounded-lg border-2 font-bold transition-all"
+                            style={{
+                              background: enabled ? 'rgba(0, 0, 0, 0.02)' : 'transparent',
+                              borderColor: enabled ? color + '40' : 'rgba(0, 0, 0, 0.1)',
+                              color: enabled ? color : 'var(--text-tertiary)'
+                            }}
+                          >
+                            {hours.toFixed(1)}h
+                          </div>
+                          
+                          <button
+                            type="button"
+                            disabled={!enabled}
+                            onClick={() => {
+                              const newHours = Math.min(10, hours + 0.5)
+                              handleInputChange(`${key}Hours` as keyof UserSettings, newHours.toString())
+                            }}
+                            className="h-8 w-8 flex items-center justify-center rounded-lg font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                            style={{
+                              background: enabled ? color : 'transparent',
+                              color: enabled ? 'white' : 'var(--text-tertiary)',
+                              boxShadow: enabled ? `0 2px 8px ${color}40` : 'none'
+                            }}
+                          >
+                            +
+                          </button>
                         </div>
                       </div>
                     ))}
                   </div>
                   
-                  <div className="mt-4 p-4 rounded-xl glass border-2 border-blue-400/20">
-                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                      <strong>Hinweis:</strong> Die Stundenangaben werden automatisch gleichmäßig auf die Tätigkeiten verteilt. 
+                  <div className="mt-4 p-4 rounded-xl border-2 backdrop-blur-sm" style={{ 
+                    background: 'rgba(59, 130, 246, 0.1)',
+                    borderColor: 'rgba(59, 130, 246, 0.3)' 
+                  }}>
+                    <p className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                      <strong>💡 Hinweis:</strong> Die Stundenangaben werden automatisch gleichmäßig auf die Tätigkeiten verteilt. 
                       Die kleinste Unterteilung beträgt 0,5 Stunden.
                     </p>
                   </div>
@@ -431,14 +568,17 @@ export default function SettingsPage() {
             {activeTab !== 'vacation' && (
               <>
                 {message && (
-                  <div className={`p-4 rounded-xl mb-4 ${
-                    message.includes('erfolgreich') 
-                      ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-2 border-green-400/30' 
-                      : 'bg-gradient-to-r from-red-500/20 to-pink-500/20 border-2 border-red-400/30'
-                  }`}>
-                    <p className="text-sm font-medium" style={{ 
-                      color: message.includes('erfolgreich') ? 'var(--success-color)' : 'var(--error-color)' 
+                  <div className="p-4 rounded-xl mb-4 border-2 backdrop-blur-sm" style={{
+                    background: message.includes('erfolgreich') ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                    borderColor: message.includes('erfolgreich') ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)',
+                    boxShadow: message.includes('erfolgreich') 
+                      ? '0 2px 12px rgba(16, 185, 129, 0.2)' 
+                      : '0 2px 12px rgba(239, 68, 68, 0.2)'
+                  }}>
+                    <p className="text-sm font-medium flex items-center gap-2" style={{ 
+                      color: message.includes('erfolgreich') ? '#10b981' : '#ef4444'
                     }}>
+                      <span>{message.includes('erfolgreich') ? '✓' : '⚠️'}</span>
                       {message}
                     </p>
                   </div>
@@ -448,10 +588,15 @@ export default function SettingsPage() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="btn-primary flex-1 py-3 text-base font-semibold disabled:opacity-50"
+                    className="flex-1 py-3 text-base font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{
+                      background: loading ? 'rgba(124, 58, 237, 0.5)' : 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)',
+                      color: 'white',
+                      boxShadow: loading ? 'none' : '0 4px 14px rgba(124, 58, 237, 0.4)'
+                    }}
                   >
                     {loading 
-                      ? 'Speichern...' 
+                      ? '💾 Speichern...' 
                       : isWelcome 
                         ? '✓ Einrichtung abschließen' 
                         : '💾 Einstellungen speichern'
