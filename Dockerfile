@@ -11,7 +11,8 @@ WORKDIR /app
 
 # Copy package files
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev
+# Install all dependencies including prisma CLI (needed for migrations)
+RUN npm ci
 
 # Install ALL dependencies for builder (including devDependencies)
 FROM base AS builder
@@ -43,6 +44,12 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+# Copy all node_modules including prisma CLI for migrations
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
+
+# Copy entrypoint script
+COPY --chown=nextjs:nodejs docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
 
 # Create temp directory for PDF generation
 RUN mkdir -p /app/temp && chown -R nextjs:nodejs /app/temp
@@ -54,4 +61,4 @@ EXPOSE 3000
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
-CMD ["node", "server.js"]
+CMD ["./docker-entrypoint.sh"]
