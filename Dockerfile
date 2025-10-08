@@ -1,6 +1,9 @@
 # Multi-stage build für optimale Image-Größe
 FROM node:20-alpine AS base
 
+# Upgrade npm to latest version
+RUN npm install -g npm@latest
+
 # Install dependencies only when needed
 FROM base AS deps
 RUN apk add --no-cache libc6-compat
