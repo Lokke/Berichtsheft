@@ -29,6 +29,10 @@ npx prisma generate
 echo "🗄️  Running database migrations..."
 npx prisma migrate deploy
 
+# Seed training professions
+echo "🌱 Seeding training professions..."
+npm run seed || echo "⚠️  Seeding failed or already seeded"
+
 # Start the dev server
 echo "✅ Starting development server on port ${PORT:-9455}..."
 PORT=${PORT:-9455} npm run dev

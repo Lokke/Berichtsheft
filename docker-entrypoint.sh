@@ -24,6 +24,11 @@ if [ ! -f /app/data/dev.db ]; then
   cd /app/data
   npx prisma migrate deploy --schema=/app/data/schema.prisma
   echo "✅ Database created and migrations applied"
+  
+  # Seed training professions
+  echo "🌱 Seeding training professions..."
+  cd /app
+  npm run seed || echo "⚠️  Seeding failed"
 else
   echo "✅ Database exists"
   # Run migrations in case there are new ones
@@ -31,12 +36,6 @@ else
   npx prisma migrate deploy --schema=/app/data/schema.prisma
   echo "✅ Migrations checked"
 fi
-
-# Generate Prisma Client
-echo "🔧 Generating Prisma Client..."
-cd /app/data
-npx prisma generate --schema=/app/data/schema.prisma
-echo "✅ Prisma Client generated"
 
 echo "🚀 Starting application..."
 cd /app

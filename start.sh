@@ -29,6 +29,10 @@ npx prisma generate
 echo "🗄️  Running database migrations..."
 npx prisma migrate deploy
 
+# Seed training professions
+echo "🌱 Seeding training professions..."
+npm run seed || echo "⚠️  Seeding failed or already seeded"
+
 # Build the application
 echo "🏗️  Building application..."
 npm run build
