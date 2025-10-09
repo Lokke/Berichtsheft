@@ -5,6 +5,10 @@ import { LaTeXEngine } from '@/lib/latex-engine'
 import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
 
+// Deaktiviere Next.js Caching für diese Route - PDF muss IMMER aktuellen DB-Stand haben
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 interface VacationPeriod {
   id: string
   startDate: Date
@@ -374,7 +378,10 @@ export async function GET(request: NextRequest) {
     return new NextResponse(new Uint8Array(pdfBuffer), {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="berichtsheft-${startDateStr}-bis-${endDateStr}.pdf"`
+        'Content-Disposition': `attachment; filename="berichtsheft-${startDateStr}-bis-${endDateStr}.pdf"`,
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
       }
     })
   } catch (error: unknown) {
